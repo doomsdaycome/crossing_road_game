@@ -5,37 +5,25 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-include(FetchContent)
+set(SFML_STATIC_LIBRARIES TRUE)                                             
+set(SFML_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/SFML-3.1.0/lib/cmake/SFML")
 
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
-)
-
-FetchContent_MakeAvailable(googletest)
+find_package(SFML 3.1 REQUIRED COMPONENTS System Window Graphics Audio Network)
 
 add_executable(crossing
-  sources/crossing.cpp
+    sources/crossing.cpp
 )
+
+target_compile_definitions(crossing PRIVATE SFML_STATIC)                 
 
 target_include_directories(crossing PRIVATE
-  "${CMAKE_CURRENT_SOURCE_DIR}/includes"
+    "${CMAKE_CURRENT_SOURCE_DIR}/includes"
 )
 
-add_executable(crossing_test
-  tests/test_animal.cpp
-  tests/test_people.cpp
+target_link_libraries(crossing PRIVATE
+    SFML::System
+    SFML::Window
+    SFML::Graphics
+    SFML::Audio
+    SFML::Network
 )
-
-target_include_directories(crossing_test PRIVATE
-  "${CMAKE_CURRENT_SOURCE_DIR}/includes"
-)
-
-target_link_libraries(crossing_test PRIVATE
-  GTest::gtest_main
-)
-
-enable_testing()
-
-include(GoogleTest)
-gtest_discover_tests(crossing_test)
