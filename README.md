@@ -20,14 +20,14 @@ You can download our game in release section and run it by using [Execution](#ex
 ```bash
 git clone https://github.com/doomsdaycome/crossing_road_game.git
 cd ./crossing_road_game/
-mkdir builds/
+mkdir build/
 cmake ../ && cmake --build ./
 ```
 
 ## Execution
 
 ```bash
-./builds/crossing
+./build/crossing.exe
 ```
 
 ## Troubleshoot
