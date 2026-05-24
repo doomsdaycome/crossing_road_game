@@ -1,104 +1,65 @@
 ```mermaid
 graph BT
+    %% --- TẦNG 1: Vòng lặp chính ---
+    subgraph L1 [Tầng Đáy: File thực thi]
+        Main["main.cpp"]
+    end
 
-&#x20;   %% Cấu hình hướng mũi tên từ dưới lên trên (Bottom-To-Top)
+    %% --- TẦNG 2: Bộ não trò chơi ---
+    subgraph L2 [Tầng Lõi: Thư mục Core]
+        Game["CGAME.h / .cpp"]
+    end
 
-&#x20;   
+    %% --- TẦNG 3: Các đối tượng trong game ---
+    subgraph L3 [Tầng Thực Thể: Thư mục Entities]
+        People["CPEOPLE.h / .cpp"]
+        
+        Vehicle["CVEHICLE.h / .cpp"]
+        Truck["CTRUCK.h / .cpp"]
+        Car["CCAR.h / .cpp"]
+        
+        Animal["CANIMAL.h / .cpp"]
+        Bird["CBIRD.h / .cpp"]
+        Dino["CDINAUSOR.h / .cpp"]
+    end
 
-&#x20;   %% Khai báo các node (tệp tin)
+    %% --- TẦNG 4: Quản lý tài nguyên & Hằng số ---
+    subgraph L4 [Tầng Hệ Thống: Thư mục System]
+        Config["Config.h"]
+        RM["ResourceManager.h"]
+    end
 
-&#x20;   Main\["main.cpp"]
+    %% --- TẦNG 5: Thư viện ngoài ---
+    SFML(("Thư viện SFML"))
 
-&#x20;   
+    %% ==========================================
+    %% CÁC ĐƯỜNG LIÊN KẾT (Include & Kế thừa)
+    %% ==========================================
 
-&#x20;   subgraph Core \["Thư mục: src/Core/"]
-
-&#x20;       Game\["CGAME.h / .cpp"]
-
-&#x20;   end
-
-&#x20;   
-
-&#x20;   subgraph Entities \["Thư mục: src/Entities/"]
-
-&#x20;       People\["CPEOPLE.h / .cpp"]
-
-&#x20;       Vehicle\["CVEHICLE.h / .cpp"]
-
-&#x20;       Truck\["CTRUCK.h / .cpp"]
-
-&#x20;       Car\["CCAR.h / .cpp"]
-
-&#x20;       Animal\["CANIMAL.h / .cpp"]
-
-&#x20;       Bird\["CBIRD.h / .cpp"]
-
-&#x20;       Dino\["CDINAUSOR.h / .cpp"]
-
-&#x20;   end
-
-&#x20;   
-
-&#x20;   subgraph System \["Thư mục: src/System/"]
-
-&#x20;       Config\["Config.h"]
-
-&#x20;       RM\["ResourceManager.h"]
-
-&#x20;   end
-
-&#x20;   
-
-&#x20;   SFML(("Thư viện SFML"))
-
-
-
-&#x20;   %% Quan hệ Kế thừa (Nét đứt)
-
-&#x20;   Truck -. "Kế thừa" .-> Vehicle
-
-&#x20;   Car -. "Kế thừa" .-> Vehicle
-
-&#x20;   Bird -. "Kế thừa" .-> Animal
-
-&#x20;   Dino -. "Kế thừa" .-> Animal
-
-
-
-&#x20;   %% Quan hệ Gọi file / Include (Nét liền)
-
-&#x20;   Main -->|"#include"| Game
-
-&#x20;   
-
-&#x20;   Game -->|"#include"| People
-
-&#x20;   Game -->|"#include"| Vehicle
-
-&#x20;   Game -->|"#include"| Animal
-
-&#x20;   
-
-&#x20;   People -->|"#include"| Config
-
-&#x20;   People -->|"#include"| RM
-
-&#x20;   
-
-&#x20;   Vehicle -->|"#include"| Config
-
-&#x20;   Vehicle -->|"#include"| RM
-
-&#x20;   
-
-&#x20;   Animal -->|"#include"| Config
-
-&#x20;   Animal -->|"#include"| RM
-
-&#x20;   
-
-&#x20;   RM -->|"#include"| SFML
-
-&#x20;   Config -->|"#include"| SFML
+    %% 1. Luồng Include từ dưới lên
+    Main -->|"#include"| Game
+    
+    Game -->|"#include"| People
+    Game -->|"#include"| Vehicle
+    Game -->|"#include"| Animal
+    
+    %% 2. Luồng Kế thừa (Nét đứt)
+    Truck -. "Kế thừa" .-> Vehicle
+    Car -. "Kế thừa" .-> Vehicle
+    Bird -. "Kế thừa" .-> Animal
+    Dino -. "Kế thừa" .-> Animal
+    
+    %% 3. Gọi các file Hệ thống dùng chung
+    People -->|"#include"| Config
+    People -->|"#include"| RM
+    
+    Vehicle -->|"#include"| Config
+    Vehicle -->|"#include"| RM
+    
+    Animal -->|"#include"| Config
+    Animal -->|"#include"| RM
+    
+    %% 4. Tầng hệ thống gọi thư viện SFML
+    RM -->|"#include <SFML/Graphics.hpp>"| SFML
+    Config -->|"#include <SFML/Graphics.hpp>"| SFML
 ```
-
