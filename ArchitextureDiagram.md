@@ -1,3 +1,4 @@
+```mermaid
 graph BT
 
 &#x20;   %% Cấu hình hướng mũi tên từ dưới lên trên (Bottom-To-Top)
@@ -99,4 +100,5 @@ graph BT
 &#x20;   RM -->|"#include"| SFML
 
 &#x20;   Config -->|"#include"| SFML
+```
 
