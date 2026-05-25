@@ -84,15 +84,15 @@ classDiagram
     %% ==========================================
 
     %% 1. Quan hệ Kế thừa (Inheritance): Mũi tên nét liền, đầu tam giác rỗng
-    CVEHICLE <|-- CTRUCK : Kế thừa [cite: 70]
-    CVEHICLE <|-- CCAR : Kế thừa [cite: 70]
-    CANIMAL <|-- CDINAUSOR : Kế thừa [cite: 82]
-    CANIMAL <|-- CBIRD : Kế thừa [cite: 82]
+    CVEHICLE <|-- CTRUCK : Kế thừa
+    CVEHICLE <|-- CCAR : Kế thừa
+    CANIMAL <|-- CDINAUSOR : Kế thừa
+    CANIMAL <|-- CBIRD : Kế thừa
 
     %% 2. Quan hệ Bao gộp (Composition): Mũi tên nét liền, chuôi hình thoi đặc
-    CGAME *-- CPEOPLE : 1..1 [cite: 104-107]
-    CGAME *-- CVEHICLE : 1..* [cite: 105-109]
-    CGAME *-- CANIMAL : 1..* [cite: 105-112]
+    CGAME *-- CPEOPLE : 1..1 
+    CGAME *-- CVEHICLE : 1..* 
+    CGAME *-- CANIMAL : 1..*
 
     %% 3. Quan hệ Phụ thuộc (Dependency): Mũi tên nét đứt, đầu nhọn hở
     %% Hệ thống phụ thuộc SFML
