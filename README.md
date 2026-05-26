@@ -11,6 +11,9 @@
 
 ## Installation
 
+> [!WARNING]
+> Mọi chỉnh sửa phải thực hiện ở trong brach của bạn. Main là sản phẩm cuối cùng và là tham chiếu chuẩn, chắc là vậy! tên branch là tên viết tắt email của bạn
+
 ### Release
 
 You can download our game in release section and run it by using [Execution](#execution)
