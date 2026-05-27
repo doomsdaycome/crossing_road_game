@@ -13,6 +13,9 @@ find_package(SFML 3.1 REQUIRED COMPONENTS System Window Graphics Audio Network)
 
 add_executable(crossing
     source/crossing.cpp
+    source/core/CGAME.cpp
+    source/states/MenuState.cpp
+    source/states/PlayingState.cpp
 )
 
 target_include_directories(crossing PRIVATE

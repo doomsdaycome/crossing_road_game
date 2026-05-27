@@ -3,8 +3,8 @@
 
 namespace Config {
     // 1. Cấu hình Cửa sổ Game (Window Settings)
-    inline constexpr int WINDOW_WIDTH = 1024;
-    inline constexpr int WINDOW_HEIGHT = 768;
+    inline constexpr int WINDOW_WIDTH = 1290;
+    inline constexpr int WINDOW_HEIGHT = 960;
     inline const std::string GAME_TITLE = "Crossing Game - Nhom 5";
     inline constexpr int FRAME_RATE_LIMIT = 60; // Giới hạn FPS giúp game chạy mượt, đều tốc độ
 
