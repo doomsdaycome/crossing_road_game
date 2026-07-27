@@ -47,7 +47,7 @@ Prerequisites
 Build Instructions (Windows / Linux)
 1. Clone the repository:
 ```bash
-git clone [https://github.com/your-username/crossing-road-game.git](https://github.com/your-username/crossing-road-game.git)
+git clone https://github.com/YinceIuCode/Crossing-Road-Game.git
 cd crossing-road-game
 ```
 2. Generate build files using CMake:
