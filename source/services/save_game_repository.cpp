@@ -1,0 +1,102 @@
+#include "services/save_game_repository.hpp"
+#include <fstream>
+#include <iostream>
+#include "utils/json.hpp"
+#include "core/config.hpp"
+
+using json = nlohmann::json;
+
+namespace SaveGameRepository {
+
+bool save(const std::string& filepath, const GameSnapshot& snapshot) {
+    json j_save;
+
+    j_save["player"]["score"] = snapshot.score;
+    j_save["player"]["grid_x"] = snapshot.playerGridX;
+    j_save["player"]["grid_y"] = snapshot.playerGridY;
+
+    j_save["lanes"] = json::array();
+    for (const auto& lData : snapshot.lanes) {
+        int patternId = 0;
+        const auto& patternList = Config::SPAWN_PATTERNS;
+
+        auto it = std::find(patternList.begin(), patternList.end(), lData.spawnPattern);
+        if (it != patternList.end()) {
+            patternId = std::distance(patternList.begin(), it);
+        }
+
+        // [type, direction, y_position, speed_multiplier, spawn_timer, pattern_index, spawn_pattern, monsters_x]
+        j_save["lanes"].push_back({
+            static_cast<int>(lData.type),
+            lData.direction,
+            lData.yPosition,
+            lData.speedMultiplier,
+            lData.spawnTimer,
+            lData.patternIndex,
+            patternId,
+            lData.monsterPositionsX
+        });
+    }
+
+    // TODO (CHANGE PATH/VALUE): dam bao thu muc cha cua filepath da ton tai truoc khi ghi file
+    std::ofstream file(filepath);
+    if (!file.is_open()) {
+        std::cerr << "Loi: Khong the tao file save tai " << filepath << "\n";
+        return false;
+    }
+
+    file << j_save.dump(4);
+    file.close();
+    return true;
+}
+
+std::optional<GameSnapshot> load(const std::string& filepath) {
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        std::cerr << "Loi: Khong the mo file save " << filepath << "\n";
+        return std::nullopt;
+    }
+
+    try {
+        json j;
+        file >> j;
+
+        GameSnapshot snapshot;
+        snapshot.score = j["player"]["score"].get<int>();
+        snapshot.playerGridX = j["player"]["grid_x"].get<int>();
+        snapshot.playerGridY = j["player"]["grid_y"].get<int>();
+
+        for (const auto& j_lane : j["lanes"]) {
+            LaneSaveData lData;
+            
+            lData.type = static_cast<LaneType>(j_lane[0].get<int>());
+            lData.direction = j_lane[1].get<int>();
+            lData.yPosition = j_lane[2].get<float>();
+            lData.speedMultiplier = j_lane[3].get<float>();
+            lData.spawnTimer = j_lane[4].get<float>();
+            lData.patternIndex = j_lane[5].get<int>();
+
+            int patternId = j_lane[6].get<int>();
+            const auto& patternList = Config::SPAWN_PATTERNS;
+
+            if (patternId >= 0 && patternId < patternList.size()) {
+                lData.spawnPattern = patternList[patternId];
+            } else {
+                lData.spawnPattern = patternList[0];
+            }
+
+            lData.monsterPositionsX = j_lane[7].get<std::vector<float>>();
+
+            snapshot.lanes.push_back(lData);
+        }
+
+        std::cout << "Doc file save thanh cong!\n";
+        return snapshot;
+    }
+    catch (const json::exception& e) {
+        std::cerr << "Loi parse JSON file save: " << e.what() << "\n";
+        return std::nullopt;
+    }
+}
+
+}
