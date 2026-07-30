@@ -5,9 +5,7 @@
 #include "entities/monster.hpp"
 #include <SFML/Graphics.hpp>
 
-namespace CollisionSystem {
-
-bool checkPlayerVsMonsters(const Player& player, const LaneManager& laneManager) {
+bool CollisionSystem::checkPlayerVsMonsters(const Player& player, const LaneManager& laneManager) {
     if (!player.isAlive()) return false;
 
     sf::FloatRect playerBounds = player.getGlobalBounds();
@@ -22,4 +20,3 @@ bool checkPlayerVsMonsters(const Player& player, const LaneManager& laneManager)
     return false;
 }
 
-}

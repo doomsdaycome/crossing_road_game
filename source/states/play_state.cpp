@@ -6,6 +6,7 @@
 #include "core/config.hpp"
 #include "services/level_repository.hpp"
 #include "services/save_game_repository.hpp"
+#include "services/resource_manager.hpp"
 #include "gameplay/collision_system.hpp"
 #include <iostream>
 
@@ -16,6 +17,9 @@ PlayingState::PlayingState(GameMode gameMode, int level) {
     m_mode_ = gameMode;
     m_currentLevel_ = level;
 
+    const sf::Texture& overlayTex = ResourceManager::instance().getTexture(Config::TOP_OVERLAY_TEXTURE);
+    m_topOverlaySprite_ = std::make_unique<sf::Sprite>(overlayTex);
+
     if (m_mode_ == GameMode::CLASSIC) {
         // TODO (CHANGE PATH/VALUE): duong dan thu muc chua file level JSON (xem Config::LEVEL_PATH_PREFIX)
         std::string filepath = Config::LEVEL_PATH_PREFIX + std::to_string(m_currentLevel_) + Config::LEVEL_PATH_SUFFIX;
@@ -24,6 +28,7 @@ PlayingState::PlayingState(GameMode gameMode, int level) {
     }
     else if (m_mode_ == GameMode::ENDLESS) {
         m_laneManager_.initEndless();
+        m_laneManager_.initBackground(0.f);
     }
 }
 
@@ -38,6 +43,7 @@ PlayingState::PlayingState(const GameSnapshot& snapshot) {
     m_currentLevel_ = 0;
 
     m_laneManager_.buildFromSaveData(snapshot.lanes);
+    m_laneManager_.initBackground(snapshot.playerGridY * Config::TILE_SIZE);
     m_player_.loadState(snapshot.playerGridX, snapshot.playerGridY);
     m_score_.loadScore(snapshot.score);
 }
@@ -48,6 +54,16 @@ void PlayingState::processEvents(Game* game, const std::optional<sf::Event>& eve
             game->pushState(new SettingState());
             return;
         }
+
+        if (keyPress->code == sf::Keyboard::Key::A || keyPress->code == sf::Keyboard::Key::Left ||
+            keyPress->code == sf::Keyboard::Key::W || keyPress->code == sf::Keyboard::Key::Up ||
+            keyPress->code == sf::Keyboard::Key::D || keyPress->code == sf::Keyboard::Key::Right ||
+            keyPress->code == sf::Keyboard::Key::S || keyPress->code == sf::Keyboard::Key::Down) 
+            {
+                if (!isGameStarted_) {
+                    isGameStarted_ = true;
+                }
+            }
 
         // MOI: F5 = Save, F9 = Load - minh hoa SaveGameRepository hoat dong that su
         if (keyPress->code == sf::Keyboard::Key::F5) {
@@ -71,6 +87,15 @@ void PlayingState::processEvents(Game* game, const std::optional<sf::Event>& eve
             }
             return;
         }
+
+        if (keyPress->code == sf::Keyboard::Key::T) {
+            if (!isRedLight_) {
+                isRedLight_ = true;
+            }
+            else {
+                isRedLight_ = false;
+            }
+        }
     }
     m_player_.processEvents(event);
 }
@@ -80,11 +105,13 @@ void PlayingState::update(Game* game, float dt) {
     m_player_.update(dt);
 
     // 2. Cap nhat camera
-    m_camera_.update(dt, m_laneManager_.getGlobalSpeedMultiplier());
+    if (isGameStarted_) {
+        m_camera_.update(dt, m_laneManager_.getGlobalSpeedMultiplier());
+    }
 
     // 3. Cap nhat lane (sinh/xoa lane, di chuyen quai)
     bool isEndless = (m_mode_ == GameMode::ENDLESS);
-    m_laneManager_.update(dt, isEndless, m_camera_.getTopEdge(), m_camera_.getBottomEdge());
+    m_laneManager_.update(dt, isEndless, m_camera_.getTopEdge(), m_camera_.getBottomEdge(), isRedLight_);
 
     // 4. MOI: kiem tra va cham Player vs Monster - hoan toan thieu o ban goc
     if (CollisionSystem::checkPlayerVsMonsters(m_player_, m_laneManager_)) {
@@ -97,9 +124,11 @@ void PlayingState::update(Game* game, float dt) {
 void PlayingState::render(sf::RenderWindow& window) {
     window.setView(m_camera_.getView());
     window.clear(sf::Color(40, 40, 40));
-
+    
     m_laneManager_.render(window);
     m_player_.render(window);
 
     window.setView(window.getDefaultView());
+
+    window.draw(*m_topOverlaySprite_);
 }

@@ -5,9 +5,7 @@
 
 using json = nlohmann::json;
 
-namespace LevelRepository {
-
-LevelData loadLevel(const std::string& filepath) {
+LevelData LevelRepository::loadLevel(const std::string& filepath) {
     LevelData data;
     std::ifstream file(filepath);
 
@@ -34,6 +32,4 @@ LevelData loadLevel(const std::string& filepath) {
 
     file.close();
     return data;
-}
-
 }

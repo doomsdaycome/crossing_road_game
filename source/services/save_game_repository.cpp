@@ -6,9 +6,7 @@
 
 using json = nlohmann::json;
 
-namespace SaveGameRepository {
-
-bool save(const std::string& filepath, const GameSnapshot& snapshot) {
+bool SaveGameRepository::save(const std::string& filepath, const GameSnapshot& snapshot) {
     json j_save;
 
     j_save["player"]["score"] = snapshot.score;
@@ -50,7 +48,7 @@ bool save(const std::string& filepath, const GameSnapshot& snapshot) {
     return true;
 }
 
-std::optional<GameSnapshot> load(const std::string& filepath) {
+std::optional<GameSnapshot> SaveGameRepository::load(const std::string& filepath) {
     std::ifstream file(filepath);
     if (!file.is_open()) {
         std::cerr << "Loi: Khong the mo file save " << filepath << "\n";
@@ -97,6 +95,4 @@ std::optional<GameSnapshot> load(const std::string& filepath) {
         std::cerr << "Loi parse JSON file save: " << e.what() << "\n";
         return std::nullopt;
     }
-}
-
 }

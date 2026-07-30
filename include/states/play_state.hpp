@@ -33,6 +33,10 @@ public:
 private:
     GameMode m_mode_;
     int m_currentLevel_;
+    bool isGameStarted_ = false;
+    bool isRedLight_ = false;
+
+    std::unique_ptr<sf::Sprite> m_topOverlaySprite_;
 
     CameraController m_camera_;
     LaneManager m_laneManager_;
