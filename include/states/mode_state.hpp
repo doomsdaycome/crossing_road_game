@@ -4,9 +4,8 @@
 
 class ModeState : public State {
 private:
-    sf::Font m_font_;
-    std::unique_ptr<sf::Text> m_classicMode_;
-    std::unique_ptr<sf::Text> m_endlessMode_;
+    std::unique_ptr<sf::Sprite> m_bgMenu_;
+    std::vector<UIButton> m_buttons_;
 public:
     ModeState();
     

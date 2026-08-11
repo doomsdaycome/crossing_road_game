@@ -21,9 +21,9 @@ Lane::Lane(LaneType type, float yPosition, int direction, float speedMultiplier,
     }
     else {
         if (type_ == LaneType::ROAD) {
-            setupRoadAssets();
+            setupZombieAssets();
         } else {
-            setupGrassAssets();
+            setupBatAssets();
         }
 
         // FIX: ban goc co 2 nhanh if/else (isEndlessMode true/false) nhung lam y het nhau (dead code).
@@ -41,7 +41,7 @@ Lane::Lane(LaneType type, float yPosition, int direction, float speedMultiplier,
         // Lane sinh sau se co spawnTimer_ nho hon (co the am) -> phai cho lau hon moi nha quai.
         int staggerSlot = spawnOrderIndex % Config::SPAWN_STAGGER_SLOTS;
         float staggerDelay = static_cast<float>(staggerSlot) * Config::SPAWN_STAGGER_STEP;
-        spawnTimer_ = spawnInterval_ - staggerDelay;
+        spawnTimer_ = staggerDelay;
     }
     if (bgSprite_) {
         bgSprite_->setPosition({0.f, yPosition_});
@@ -67,9 +67,9 @@ Lane::Lane(const LaneSaveData& saveData)
     if (type_ == LaneType::REST) {
         setupRestAssets();
     } else if (type_ == LaneType::ROAD) {
-        setupRoadAssets();
+        setupZombieAssets();
     } else {
-        setupGrassAssets();
+        setupBatAssets();
     }
 
     if (bgSprite_) {
@@ -88,34 +88,31 @@ Lane::Lane(const LaneSaveData& saveData)
     }
 }
 
-void Lane::setupRoadAssets() {
-    const sf::Texture& bgTex = ResourceManager::instance().getTexture(Config::ROAD_BG_TEXTURE);
-    monsterTexture_ = &ResourceManager::instance().getTexture(Config::ROAD_MONSTER_TEXTURE);
+void Lane::setupZombieAssets() {
+    const sf::Texture& bgTex = ResourceManager::instance().getTexture(Config::ZOMBIE_LANE_TEXTURE);
+    monsterTexture_ = &ResourceManager::instance().getTexture(Config::ZOMBIE_TEXTURE);
 
     bgSprite_ = std::make_unique<sf::Sprite>(bgTex);
-    baseSpeed_ = Config::ROAD_BASE_SPEED;
-    monsterFrameCount_ = Config::ROAD_MONSTER_FRAME_COUNT;
-    spawnInterval_ = Config::ROAD_SPAWN_INTERVAL;
+    baseSpeed_ = Config::ZOMBIE_BASE_SPEED;
+    monsterFrameCount_ = Config::ZOMBIE_FRAME_COUNT;
 }
 
-void Lane::setupGrassAssets() {
-    const sf::Texture& bgTex = ResourceManager::instance().getTexture(Config::GRASS_BG_TEXTURE);
-    monsterTexture_ = &ResourceManager::instance().getTexture(Config::GRASS_MONSTER_TEXTURE);
+void Lane::setupBatAssets() {
+    const sf::Texture& bgTex = ResourceManager::instance().getTexture(Config::BAT_LANE_TEXTURE);
+    monsterTexture_ = &ResourceManager::instance().getTexture(Config::BAT_TEXTURE);
 
     bgSprite_ = std::make_unique<sf::Sprite>(bgTex);
-    baseSpeed_ = Config::GRASS_BASE_SPEED;
-    monsterFrameCount_ = Config::GRASS_MONSTER_FRAME_COUNT;
-    spawnInterval_ = Config::GRASS_SPAWN_INTERVAL;
+    baseSpeed_ = Config::BAT_BASE_SPEED;
+    monsterFrameCount_ = Config::BAT_FRAME_COUNT;
 }
 
 void Lane::setupRestAssets() {
     // MOI: lane nghi chan - chi co nen, KHONG co quai nen khong can load monsterTexture_
-    const sf::Texture& bgTex = ResourceManager::instance().getTexture(Config::REST_BG_TEXTURE);
+    const sf::Texture& bgTex = ResourceManager::instance().getTexture(Config::REST_LANE_TEXTURE);
 
     bgSprite_ = nullptr;
     baseSpeed_ = 0.f;
     monsterFrameCount_ = 1;
-    spawnInterval_ = 0.f; // khong dung den vi update() se bo qua toan bo logic nha quai
     monsterTexture_ = nullptr;
 }
 
@@ -146,23 +143,53 @@ LaneSaveData Lane::exportSaveData() const {
 void Lane::update(float deltaTime, bool isRedLight) {
     // MOI: lane REST (nghi chan) khong bao gio nha quai
     if (type_ != LaneType::REST && !isRedLight) {
-        spawnTimer_ += deltaTime;
+        spawnTimer_ -= deltaTime;
 
-        if (spawnTimer_ >= spawnInterval_ && !spawnPattern_.empty()) {
-            // FIX: ban goc gan spawnTimer_ = spawnInterval_ (khong reset ve 0), co the lam
-            // sai lech thoi gian nha quai neu dt lon (frame spike). Gio reset ve 0.
-            spawnTimer_ = 0.f;
-
-            int spawnCount = spawnPattern_[static_cast<size_t>(patternIndex_)];
-            patternIndex_ = (patternIndex_ + 1) % static_cast<int>(spawnPattern_.size());
-
-            float startX = (direction_ == 1) ? Config::MONSTER_SPAWN_START_LEFT : Config::MONSTER_SPAWN_START_RIGHT;
-            float finalSpeed = baseSpeed_ * speedMultiplier_;
-
-            for (int i = 0; i < spawnCount; ++i) {
-                float offsetX = (direction_ == 1) ? -(i * Config::MONSTER_SPAWN_OFFSET_X) : (i * Config::MONSTER_SPAWN_OFFSET_X);
-                monsters_.push_back(Monster(*monsterTexture_, startX + offsetX, yPosition_, finalSpeed, direction_, monsterFrameCount_));
+        if (spawnTimer_ <= 0.f && !spawnPattern_.empty()) {
+            
+            // ==========================================
+            // 1. LỚP BẢO HIỂM KHOẢNG CÁCH (Physical Gap Lock)
+            // ==========================================
+            bool canSpawn = true;
+            if (!monsters_.empty()) {
+                // Lấy tọa độ của con quái vật vừa sinh ra gần nhất
+                const auto& lastMonster = monsters_.back();
+                float spawnX = (direction_ == 1) ? Config::MONSTER_SPAWN_START_LEFT : Config::MONSTER_SPAWN_START_RIGHT;
+                
+                // Đo khoảng cách vật lý từ chỗ sinh đến đuôi con quái
+                float distanceToLast = std::abs(lastMonster.getPositionX() - spawnX);
+                
+                // BẮT BUỘC phải hở một khoảng bằng 1 TILE_SIZE (64px) + 20px lề thì mới cho sinh tiếp
+                if (distanceToLast < Config::TILE_SIZE + 20.f) { 
+                    canSpawn = false;
+                }
             }
+
+            // ==========================================
+            // 2. CHỈ SINH KHI ĐÃ ĐỦ ĐIỀU KIỆN AN TOÀN
+            // ==========================================
+            if (canSpawn) {
+                float startX = (direction_ == 1) ? Config::MONSTER_SPAWN_START_LEFT : Config::MONSTER_SPAWN_START_RIGHT;
+                float finalSpeed = baseSpeed_ * speedMultiplier_;
+
+                monsters_.push_back(Monster(*monsterTexture_, startX, yPosition_, finalSpeed, direction_, monsterFrameCount_));
+
+                float nextDelay = spawnPattern_[static_cast<size_t>(patternIndex_)];
+                
+                // Tính toán delay và ÉP MỨC TỐI THIỂU (Clamp)
+                // Ngăn chặn việc delay tụt xuống quá thấp khi speedMultiplier_ quá lớn
+                float delayReduction = 1.0f + (speedMultiplier_ - 1.0f) * 0.25f; 
+                float actualDelay = nextDelay / delayReduction;
+
+                if (actualDelay < 0.5f) {
+                    actualDelay = 0.5f; // Ép delay thấp nhất là 0.2 giây
+                }
+
+                spawnTimer_ = actualDelay;
+                patternIndex_ = (patternIndex_ + 1) % static_cast<int>(spawnPattern_.size());
+            }
+            // Lưu ý: Nếu canSpawn == false, spawnTimer_ vẫn đang <= 0.
+            // Tới frame tiếp theo, game sẽ nhảy vào kiểm tra khoảng cách lại cho đến khi đủ khoảng hở!
         }
     }
 

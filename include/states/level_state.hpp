@@ -4,8 +4,14 @@
 
 class LevelState : public State {
 private:
-    sf::Font m_font_;
-    std::unique_ptr<sf::Text> m_level1_;
+    std::unique_ptr<sf::Sprite> m_bgOption_;
+    std::vector<UIButton> m_buttons_;
+
+    int m_currentPage_;
+    int m_totalLevels_;
+    int m_levelsPerPage_;
+
+    void buildLevelButtons();
 public:
     LevelState();
     

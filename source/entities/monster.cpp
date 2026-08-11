@@ -32,11 +32,11 @@ void Monster::updateTextureRect() {
     int leftOffset = m_currentFrame_ * m_frameWidth_;
 
     if (m_direction_ == 1) {
-        m_sprite_->setTextureRect(sf::IntRect({leftOffset, 0}, {m_frameWidth_, m_frameHeight_}));
+        m_sprite_->setTextureRect(sf::IntRect({leftOffset + m_frameWidth_, 0}, {-m_frameWidth_, m_frameHeight_}));
     }
     else {
         // Lat nguoc bang cach dao chieu width
-        m_sprite_->setTextureRect(sf::IntRect({leftOffset + m_frameWidth_, 0}, {-m_frameWidth_, m_frameHeight_}));
+        m_sprite_->setTextureRect(sf::IntRect({leftOffset, 0}, {m_frameWidth_, m_frameHeight_}));
     }
 }
 

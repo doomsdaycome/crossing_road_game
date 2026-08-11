@@ -4,116 +4,124 @@
 #include <string>
 
 // ==========================================
-// CONFIG: Toan bo hang so va gia tri can bang game (balancing)
-// Gom ve mot cho de de chinh sua, tranh "magic numbers" rai rac khap code.
+// THÔNG SỐ CẤU HÌNH TRÒ CHƠI (GAME CONFIGURATION)
+// Chứa toàn bộ các hằng số, thông số cân bằng game và đường dẫn tài nguyên.
+// Việc gom nhóm giúp dễ dàng tinh chỉnh độ khó và tái sử dụng mã nguồn.
 // ==========================================
 namespace Config {
 
-    // ---------- WINDOW INFO ------------
-    inline const std::string WINDOW_TITLE = "Crossing Road Game";
-    inline constexpr int WINDOW_WIDTH = 1024;
-    inline constexpr int WINDOW_HEIGHT = 768;
+    // ==========================================
+    // 1. HỆ THỐNG HIỂN THỊ & CAMERA
+    // ==========================================
+    inline const std::string WINDOW_TITLE = "Crossing Castle"; // Tên hiển thị trên thanh tiêu đề cửa sổ
+    inline constexpr int WINDOW_WIDTH     = 1024;              // Chiều rộng cửa sổ thực tế (pixel)
+    inline constexpr int WINDOW_HEIGHT    = 768;               // Chiều cao cửa sổ thực tế (pixel)
+    
+    inline constexpr float VIEW_WIDTH     = 1024.f;            // Kích thước chiều ngang của Camera quét trong game
+    inline constexpr float VIEW_HEIGHT    = 768.f;             // Kích thước chiều dọc của Camera quét trong game
 
-    // ---------- CAMERA / VIEW ----------
-    inline constexpr float VIEW_WIDTH   = 1024.f;
-    inline constexpr float VIEW_HEIGHT  = 768.f;
+    // ==========================================
+    // 2. KHÔNG GIAN LƯỚI (GRID SYSTEM)
+    // ==========================================
+    inline constexpr float TILE_SIZE = 64.f; // Kích thước của 1 ô vuông trên bản đồ (64x64 pixel). Mọi di chuyển đều dựa trên ô này
 
-    // ---------- GRID / TILE ----------
-    inline constexpr float TILE_SIZE = 64.f;
+    // ==========================================
+    // 3. THÔNG SỐ NHÂN VẬT (PLAYER)
+    // ==========================================
+    inline constexpr float PLAYER_SPEED        = 600.f; // Tốc độ lướt của nhân vật (pixel/giây). Càng cao, nhân vật nhảy càng dứt khoát
+    inline constexpr int   PLAYER_START_GRID_X = 5;     // Ô xuất phát theo trục X (Cột số 5)
+    inline constexpr int   PLAYER_START_GRID_Y = 10;    // Ô xuất phát theo trục Y (Hàng số 10)
+    
+    // Giới hạn không gian di chuyển (Chống văng ra khỏi màn hình)
+    inline constexpr int PLAYER_MIN_GRID_X = 0;         // Cột tận cùng bên trái
+    inline constexpr int PLAYER_MAX_GRID_X = 15;        // Cột tận cùng bên phải
 
-    // ---------- PLAYER ----------
-    inline constexpr float PLAYER_SPEED = 200.f;
-    // TODO (CHANGE PATH/VALUE): toa do luoi xuat phat cua nhan vat
-    inline constexpr int PLAYER_START_GRID_X = 5;
-    inline constexpr int PLAYER_START_GRID_Y = 10;
-    // Gioi han di chuyen ngang cua nguoi choi (so o luoi) - fix bug ban goc: di ra ngoai vo han
-    inline constexpr int PLAYER_MIN_GRID_X = 0;
-    inline constexpr int PLAYER_MAX_GRID_X = 15;
+    // ==========================================
+    // 4. QUÁI VẬT & LÀN ĐƯỜNG (OBSTACLES & LANES)
+    // Thay vì Road (Đường) và Grass (Cỏ), ta dùng hệ thống Zombie (Đi bộ) và Bat (Dơi bay)
+    // ==========================================
+    inline constexpr float LANE_HEIGHT = 64.f; // Chiều cao của 1 làn đường, bằng đúng 1 TILE_SIZE
+    
+    // Tốc độ di chuyển cơ bản (pixel/giây)
+    inline constexpr float ZOMBIE_BASE_SPEED = 100.f; // Tốc độ gốc của Zombie đi bộ trên nền đá
+    inline constexpr float BAT_BASE_SPEED    = 120.f; // Tốc độ gốc của Dơi bay (nhanh hơn Zombie)
+    
+    // Số khung hình (Frame) để chạy Animation cho từng loại quái
+    inline constexpr int ZOMBIE_FRAME_COUNT = 1; // Số frame ảnh của Zombie
+    inline constexpr int BAT_FRAME_COUNT    = 1; // Số frame ảnh của Dơi
 
-    // ---------- LANE ----------
-    inline constexpr float LANE_HEIGHT = 64.f;
-    inline constexpr float ROAD_BASE_SPEED = 150.f;
-    inline constexpr float GRASS_BASE_SPEED = 200.f;
-    inline constexpr float ROAD_SPAWN_INTERVAL = 3.5f;
-    inline constexpr float GRASS_SPAWN_INTERVAL = 2.0f;
-    inline constexpr int   ROAD_MONSTER_FRAME_COUNT = 1;
-    inline constexpr int   GRASS_MONSTER_FRAME_COUNT = 1;
-    inline constexpr float MONSTER_SPAWN_OFFSET_X = 150.f;
-    inline constexpr float MONSTER_SPAWN_START_LEFT  = -100.f;
-    inline constexpr float MONSTER_SPAWN_START_RIGHT = 1124.f;
-    inline constexpr float MONSTER_OFFSCREEN_LEFT  = -200.f;
-    inline constexpr float MONSTER_OFFSCREEN_RIGHT = 1224.f;
+    // Tọa độ sinh/hủy quái vật
+    inline constexpr float MONSTER_SPAWN_START_LEFT  = -100.f; // Điểm bắt đầu đi ra từ bên trái màn hình
+    inline constexpr float MONSTER_SPAWN_START_RIGHT = 1124.f; // Điểm bắt đầu đi ra từ bên phải màn hình
+    inline constexpr float MONSTER_OFFSCREEN_LEFT    = -200.f; // Quá vạch này bên trái -> Xóa quái khỏi RAM
+    inline constexpr float MONSTER_OFFSCREEN_RIGHT   = 1224.f; // Quá vạch này bên phải -> Xóa quái khỏi RAM
 
-    // ---------- ENDLESS MODE ----------
-    // FLAPPY-BIRD STYLE: sinh TUNG lane mot (khong con sinh theo batch) moi khi
-    // camera con cach lane xa nhat mot khoang ENDLESS_GENERATE_THRESHOLD - giong
-    // cach Flappy Bird luon giu 1 khoang cach co dinh phia truoc de sinh ong tiep theo.
-    inline constexpr int   ENDLESS_INITIAL_LANE_COUNT = 15;
-    inline constexpr float ENDLESS_GENERATE_THRESHOLD  = 300.f;
-    inline constexpr float ENDLESS_LANE_CULL_MARGIN    = 200.f;
-    // LUU Y: gia tri nay ap dung MOI LAN 1 lane duoc sinh (khong con theo batch 5 lane nhu ban cu).
-    // Ban cu: +0.05 moi 5 lane (~+0.01/lane). Gio dat truc tiep +0.01/lane de giu nguyen toc do
-    // tang dan nhu cu - neu muon game kho nhanh hon, tang gia tri nay len.
-    // TODO (CHANGE PATH/VALUE): tinh chinh do kho theo thoi gian
-    inline constexpr float ENDLESS_SPEED_INCREMENT     = 0.01f;
-    inline constexpr float CAMERA_BASE_SCROLL_SPEED    = 50.f;
+    // ==========================================
+    // 5. CƠ CHẾ CUỘN VÔ TẬN (ENDLESS MODE)
+    // ==========================================
+    inline constexpr float CAMERA_BASE_SCROLL_SPEED   = 30.f;   // Tốc độ Camera tự động trượt lên trên (Ép người chơi phải đi tiếp)
+    inline constexpr int   ENDLESS_INITIAL_LANE_COUNT = 15;     // Số lượng làn đường được tạo sẵn ngay khi vừa vào game
+    
+    // Thuật toán cuốn chiếu (Procedural Generation)
+    inline constexpr float ENDLESS_GENERATE_THRESHOLD = 1000.f; // Khoảng cách nhìn trước. Nếu Camera cách mép trên ngần này pixel, tạo đường mới
+    inline constexpr float ENDLESS_LANE_CULL_MARGIN   = 200.f;  // Khoảng cách dọn dẹp. Làn đường nào tụt lại sau Camera 200px sẽ bị xóa sổ
+    
+    // Hệ thống tăng độ khó (Difficulty Curve)
+    inline constexpr float ENDLESS_SPEED_INCREMENT = 0.01f;     // Cứ mỗi 1 làn đường mới sinh ra, vận tốc toàn bộ game tăng thêm 1%
 
-    // TODO (CHANGE PATH/VALUE): so luong lane "nghi chan" (khong quai) ngay truoc mat
-    // nguoi choi khi vua vao Endless mode, cho nguoi choi vai giay lam quen truoc khi gap quai.
-    inline constexpr int REST_LANE_COUNT_AT_START = 5;
+    // ==========================================
+    // 6. CƠ CHẾ BẢO HIỂM SINH MẠNH (REST LANES)
+    // Game luôn chèn các làn an toàn để người chơi có chỗ nghỉ chân
+    // ==========================================
+    inline constexpr int REST_LANE_COUNT_AT_START     = 5;  // Cho người chơi 5 làn an toàn ở vạch xuất phát để khởi động
+    inline constexpr int REST_LANE_CHANCE_PERCENT     = 18; // Mỗi làn sinh ra có 18% tỷ lệ ngẫu nhiên là làn nghỉ chân (Không quái)
+    inline constexpr int MAX_CONSECUTIVE_HAZARD_LANES = 3;  // Nếu xui xẻo ra 3 làn nguy hiểm liên tiếp, làn thứ 4 bắt buộc phải là làn an toàn
 
-    // ---------- LANE NGHI CHAN XUYEN SUOT GAME (kieu Crossy Road that) ----------
-    // Crossy Road that KHONG bao gio de nguoi choi gap qua nhieu lane nguy hiem
-    // (co xe/quai) lien tiep ma khong co it nhat 1 lane "an toan" xen giua - dieu nay
-    // giu game luon CHOI DUOC (khong bi bit duong bat kha thi) du toc do cuon tang dan.
-    //
-    // Luat don gian:
-    // 1) Random: moi lane co REST_LANE_CHANCE_PERCENT % co hoi la lane nghi chan.
-    // 2) Bat buoc: neu da co qua MAX_CONSECUTIVE_HAZARD_LANES lane nguy hiem lien tiep
-    //    ma chua "trung" duoc lane nghi chan nao, lane tiep theo se BI EP thanh nghi chan.
-    // TODO (CHANGE PATH/VALUE): tang REST_LANE_CHANCE_PERCENT / giam MAX_CONSECUTIVE_HAZARD_LANES
-    // de game de tho hon, va nguoc lai de tang do kho.
-    inline constexpr int REST_LANE_CHANCE_PERCENT      = 18; // % ngau nhien moi lane la nghi chan
-    inline constexpr int MAX_CONSECUTIVE_HAZARD_LANES  = 3;  // toi da 3 lane nguy hiem lien tiep
+    // ==========================================
+    // 7. THUẬT TOÁN ĐIỀU HƯỚNG NHỊP ĐỘ (SPAWN PATTERNS)
+    // ==========================================
+    // Tránh tình trạng quái ra đồng loạt cùng lúc trên các làn khác nhau
+    inline constexpr int   SPAWN_STAGGER_SLOTS = 6;     // Chia thành 6 chu kỳ lệch nhịp
+    inline constexpr float SPAWN_STAGGER_STEP  = 0.25f; // Mỗi chu kỳ xuất phát cách nhau 0.25 giây
 
-    // ---------- RAI THOI GIAN NHA QUAI GIUA CAC LANE ----------
-    // Neu khong co bo lech nay, cac lane duoc sinh gan nhu cung luc se co spawnTimer_
-    // bat dau tu 0 giong het nhau -> quai xuat hien dong loat tren toan man hinh (khong tu nhien).
-    // Voi bo lech nay: lane sinh TRUOC se nha quai SOM hon (gan nhu ngay lap tuc),
-    // lane sinh SAU se nha quai cham hon theo dung thu tu sinh ra.
-    // TODO (CHANGE PATH/VALUE): tang/giam de thay doi do "so le" giua cac lane
-    inline constexpr float SPAWN_STAGGER_STEP  = 0.25f;
-    // So luong lane trong 1 chu ky rai deu truoc khi lap lai (tranh do tre cong don vo han
-    // khi Endless mode chay rat lau va sinh ra hang tram lane).
-    inline constexpr int   SPAWN_STAGGER_SLOTS = 6;
-
-    // ---------- ASSET PATHS ----------
-    inline const std::string TOP_OVERLAY_TEXTURE    = "asset/images/bg0.png";
-    inline const std::string BG_TEXTURE             = "asset/images/bg1.png";
-    // TODO (CHANGE PATH/VALUE): doi lai duong dan asset cho dung du an cua ban
-    inline const std::string ROAD_BG_TEXTURE        = "asset/images/ln0.png";
-    inline const std::string ROAD_MONSTER_TEXTURE   = "asset/images/mt1.png";
-    inline const std::string GRASS_BG_TEXTURE       = "asset/images/ln1.png";
-    inline const std::string GRASS_MONSTER_TEXTURE  = "asset/images/mt2.png";
-    // TODO (CHANGE PATH/VALUE): anh nen cho lane nghi chan (khong quai) - co the tai su dung anh grass
-    inline const std::string REST_BG_TEXTURE        = "asset/images/ln2.png";
-    inline const std::string PLAYER_TEXTURE         = "asset/images/pl0.png";
-    // TODO (CHANGE PATH/VALUE): font chu dung cho man hinh Game Over / UI
-    inline const std::string MAIN_FONT              = "asset/fonts/font.otf";
-
-    // TODO (CHANGE PATH/VALUE): duong dan thu muc chua level JSON
-    inline const std::string LEVEL_PATH_PREFIX = "asset/levels/level_";
-    inline const std::string LEVEL_PATH_SUFFIX  = ".json";
-
-    // TODO (CHANGE PATH/VALUE): duong dan file save mac dinh
-    inline const std::string DEFAULT_SAVE_PATH = "save/save_game.json";
-
-    // ---------- SPAWN PATTERNS ----------
-    // Moi pattern la so luong quai xuat hien moi lan "nha" quai, lap vong.
-    // TODO (CHANGE PATH/VALUE): tinh chinh do kho bang cach doi cac pattern nay
-    inline const std::vector<std::vector<int>> SPAWN_PATTERNS = {
-        {1, 1, 2},
-        {1, 2, 1, 1},
-        {2, 1}
+    // Các cụm thời gian giãn cách (Gap-based Spawning) - Đơn vị: Giây
+    inline const std::vector<std::vector<float>> SPAWN_PATTERNS = {
+        {0.5f, 4.0f},               // Nhịp 1: 2 con sát nhau, hở 4 giây
+        {0.8f, 0.8f, 3.5f},         // Nhịp 2: 3 con nối đuôi, hở 3.5 giây
+        {1.5f, 1.5f, 5.0f},         // Nhịp 3: 3 con tà tà cách đều, hở 5 giây
+        {0.2f, 0.2f, 0.2f, 4.5f}    // Nhịp 4: 4 con bám sát đít nhau, hở 4.5 giây
     };
+
+    // ==========================================
+    // 8. ĐƯỜNG DẪN TÀI NGUYÊN (ASSET PATHS)
+    // ==========================================
+    // --- Nền và Phông chữ ---
+    inline const std::string MAIN_FONT           = "asset/fonts/font.ttf";       // Phông chữ toàn hệ thống
+    inline const std::string TOP_OVERLAY_TEXTURE = "asset/images/world/bg0.png"; // Khung viền hang động trên cùng
+    inline const std::string BG_TEXTURE          = "asset/images/world/bg1.png"; // Lớp nền gạch cơ sở
+    
+    // --- Giao diện (UI) ---
+    inline const std::string MENU_BG_TEXTURE     = "asset/images/ui/bg.png";
+    inline const std::string OPTION_BG_TEXTURE   = "asset/images/ui/bg_option.png";           
+    inline const std::string BTN_BLANK_TEXTURE   = "asset/images/ui/btn_blank.png";
+    inline const std::string BTN_BLANK_SQUARE_TEXTURE = "asset/images/ui/btn_square.png";    
+    inline const std::string BTN_START_TEXTURE   = "asset/images/ui/btn_start.png";
+
+    // --- Thực thể & Môi trường ---
+    inline const std::string PLAYER_TEXTURE      = "asset/images/entities/pl0.png"; // Hiệp sĩ
+    
+    inline const std::string ZOMBIE_LANE_TEXTURE = "asset/images/world/ln0.png";    // Nền đá (Cho Zombie)
+    inline const std::string ZOMBIE_TEXTURE      = "asset/images/entities/mt1.png"; // Quái Zombie
+    
+    inline const std::string BAT_LANE_TEXTURE    = "asset/images/world/ln1.png";    // Nền vực/hang (Cho Dơi)
+    inline const std::string BAT_TEXTURE         = "asset/images/entities/mt2.png"; // Quái Dơi
+    
+    inline const std::string REST_LANE_TEXTURE   = "asset/images/world/ln2.png";    // Nền an toàn
+
+    // ==========================================
+    // 9. DỮ LIỆU I/O (TỆP TIN LƯU TRỮ)
+    // ==========================================
+    inline const std::string LEVEL_PATH_PREFIX = "asset/levels/level_"; // Tiền tố load bản đồ Classic
+    inline const std::string LEVEL_PATH_SUFFIX = ".json";               // Định dạng file bản đồ
+    inline const std::string DEFAULT_SAVE_PATH = "save/save_game.json"; // File lưu game
 }

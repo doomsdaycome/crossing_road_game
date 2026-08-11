@@ -5,16 +5,6 @@
 #include <string>
 #include <iostream>
 
-// ==========================================
-// RESOURCE MANAGER (Singleton)
-// Dam bao moi texture chi duoc load tu o dia DUY NHAT MOT LAN.
-// Toan bo Entity (Lane, Monster, Player...) phai xin texture qua day,
-// KHONG duoc tu goi loadFromFile() nua.
-//
-// Vi texture duoc giu song suot vong doi chuong trinh (static cache),
-// cac sf::Sprite giu con tro/tham chieu toi texture nay se KHONG BAO GIO
-// bi dangling - giai quyet triet de bug "SFML texture lifetime" da neu trong audit.
-// ==========================================
 class ResourceManager {
 public:
     static ResourceManager& instance() {
@@ -22,10 +12,9 @@ public:
         return manager;
     }
 
-    // Tra ve tham chieu texture da cache. Neu chua co, load 1 lan roi cache lai.
     const sf::Texture& getTexture(const std::string& filepath) {
-        auto it = cache_.find(filepath);
-        if (it != cache_.end()) {
+        auto it = textureCache_.find(filepath);
+        if (it != textureCache_.end()) {
             return it->second;
         }
 
@@ -34,14 +23,34 @@ public:
             std::cerr << "Loi: Khong the load texture: " << filepath << "\n";
         }
 
-        auto [insertedIt, success] = cache_.emplace(filepath, std::move(texture));
+        auto [insertedIt, success] = textureCache_.emplace(filepath, std::move(texture));
         (void)success;
         return insertedIt->second;
     }
 
-    // Xoa toan bo cache (dung khi chuyen man hinh lon / thoat game)
+    // ==========================================
+    // MỚI: Hàm Load và Cache Font chữ
+    // ==========================================
+    const sf::Font& getFont(const std::string& filepath) {
+        auto it = fontCache_.find(filepath);
+        if (it != fontCache_.end()) {
+            return it->second;
+        }
+
+        sf::Font font;
+        // LƯU Ý: SFML 3.x đổi hàm loadFromFile thành openFromFile đối với Font
+        if (!font.openFromFile(filepath)) {
+            std::cerr << "Loi: Khong the load font: " << filepath << "\n";
+        }
+
+        auto [insertedIt, success] = fontCache_.emplace(filepath, std::move(font));
+        (void)success;
+        return insertedIt->second;
+    }
+
     void clear() {
-        cache_.clear();
+        textureCache_.clear();
+        fontCache_.clear(); // Nhớ clear cả cache font
     }
 
     ResourceManager(const ResourceManager&) = delete;
@@ -49,5 +58,10 @@ public:
 
 private:
     ResourceManager() = default;
-    std::unordered_map<std::string, sf::Texture> cache_;
+    
+    // Đổi tên biến cũ cho rõ nghĩa hơn
+    std::unordered_map<std::string, sf::Texture> textureCache_; 
+    
+    // MỚI: Kho chứa Font
+    std::unordered_map<std::string, sf::Font> fontCache_;       
 };

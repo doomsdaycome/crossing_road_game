@@ -20,7 +20,7 @@ struct LaneSaveData {
     int direction = 1;
     float speedMultiplier = 1.f;
 
-    std::vector<int> spawnPattern;
+    std::vector<float> spawnPattern;
     int patternIndex = 0;
     float spawnTimer = 0.f;
 
@@ -56,8 +56,8 @@ public:
     const std::vector<Monster>& getMonsters() const;
 
 private:
-    void setupRoadAssets();
-    void setupGrassAssets();
+    void setupZombieAssets();
+    void setupBatAssets();
     void setupRestAssets();
 
     LaneType type_ = LaneType::ROAD;
@@ -67,9 +67,8 @@ private:
     float baseSpeed_ = 0.f;
 
     int monsterFrameCount_ = 1;
-    float spawnInterval_ = 1.f;
     float spawnTimer_ = 0.f;
-    std::vector<int> spawnPattern_;
+    std::vector<float> spawnPattern_;
     int patternIndex_ = 0;
 
     std::unique_ptr<sf::Sprite> bgSprite_;

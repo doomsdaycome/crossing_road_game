@@ -31,41 +31,44 @@ Player::Player() : m_speed_(Config::PLAYER_SPEED), m_isAlive_(true), m_isMoving_
 void Player::processEvents(const std::optional<sf::Event>& event) {
     if (!m_isAlive_) return; // Chet roi thi mien thao tac
 
-    if (!m_isMoving_) {
-        if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
-            bool hasInput = false;
-            int nextGridX = m_gridX_;
-            int nextGridY = m_gridY_;
+    if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
+        if (m_isMoving_) {
+            m_sprite_->setPosition(m_targetPos_);
+            m_isMoving_ = false;
+        }
 
-            if (keyPress->code == sf::Keyboard::Key::W || keyPress->code == sf::Keyboard::Key::Up) {
-                nextGridY -= 1;
-                hasInput = true;
-            }
-            else if (keyPress->code == sf::Keyboard::Key::S || keyPress->code == sf::Keyboard::Key::Down) {
-                nextGridY += 1;
-                hasInput = true;
-            }
-            else if (keyPress->code == sf::Keyboard::Key::A || keyPress->code == sf::Keyboard::Key::Left) {
-                nextGridX -= 1;
-                hasInput = true;
-            }
-            else if (keyPress->code == sf::Keyboard::Key::D || keyPress->code == sf::Keyboard::Key::Right) {
-                nextGridX += 1;
-                hasInput = true;
-            }
+        bool hasInput = false;
+        int nextGridX = m_gridX_;
+        int nextGridY = m_gridY_;
 
-            // FIX: gioi han bien ban do theo chieu ngang (ban goc co the di ra ngoai vo han)
-            nextGridX = std::clamp(nextGridX, Config::PLAYER_MIN_GRID_X, Config::PLAYER_MAX_GRID_X);
+        if (keyPress->code == sf::Keyboard::Key::W || keyPress->code == sf::Keyboard::Key::Up) {
+            nextGridY -= 1;
+            hasInput = true;
+        }
+        else if (keyPress->code == sf::Keyboard::Key::S || keyPress->code == sf::Keyboard::Key::Down) {
+            nextGridY += 1;
+            hasInput = true;
+        }
+        else if (keyPress->code == sf::Keyboard::Key::A || keyPress->code == sf::Keyboard::Key::Left) {
+            nextGridX -= 1;
+            hasInput = true;
+        }
+        else if (keyPress->code == sf::Keyboard::Key::D || keyPress->code == sf::Keyboard::Key::Right) {
+            nextGridX += 1;
+            hasInput = true;
+        }
 
-            if (hasInput && (nextGridX != m_gridX_ || nextGridY != m_gridY_)) {
-                m_gridX_ = nextGridX;
-                m_gridY_ = nextGridY;
-                m_targetPos_ = {
-                    m_gridX_ * m_tileSize_ + (m_tileSize_ / 2),
-                    m_gridY_ * m_tileSize_ + (m_tileSize_ / 2)
-                };
-                m_isMoving_ = true;
-            }
+        // FIX: gioi han bien ban do theo chieu ngang (ban goc co the di ra ngoai vo han)
+        nextGridX = std::clamp(nextGridX, Config::PLAYER_MIN_GRID_X, Config::PLAYER_MAX_GRID_X);
+
+        if (hasInput && (nextGridX != m_gridX_ || nextGridY != m_gridY_)) {
+            m_gridX_ = nextGridX;
+            m_gridY_ = nextGridY;
+            m_targetPos_ = {
+                m_gridX_ * m_tileSize_ + (m_tileSize_ / 2),
+                m_gridY_ * m_tileSize_ + (m_tileSize_ / 2)
+            };
+            m_isMoving_ = true;
         }
     }
 }

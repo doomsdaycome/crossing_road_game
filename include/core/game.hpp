@@ -11,6 +11,8 @@ private:
     std::vector<State*> m_states_;
     sf::Clock gameClock;
 
+    bool m_isFocused_ = true;
+
 public:
     Game();
     ~Game();
@@ -25,4 +27,5 @@ public:
         return m_states_.empty() ? nullptr : m_states_.back();
     }
     sf::RenderWindow& getWindow() { return m_window_; }
+    bool isFocused() const { return m_isFocused_; }
 };
