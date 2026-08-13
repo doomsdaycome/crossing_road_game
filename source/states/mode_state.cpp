@@ -74,7 +74,7 @@ void ModeState::processEvents(Game* game, const std::optional<sf::Event>& event)
                             game->pushState(new LevelState());
                             break;
                         case ButtonAction::Endless:
-                            game->changeState(new PlayingState(GameMode::ENDLESS));
+                            m_transition_.startClosing();
                             break;
                         case ButtonAction::Back:
                             game->popState();
@@ -91,6 +91,15 @@ void ModeState::processEvents(Game* game, const std::optional<sf::Event>& event)
 }
 
 void ModeState::update(Game* game, float dt) {
+    if (m_transition_.isBusy()) {
+        m_transition_.update(dt);
+        
+        if (m_transition_.isFinishedClosing()) {
+            game->changeState(new PlayingState(GameMode::ENDLESS));
+        }
+        return; 
+    }
+
     sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
     sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(pixelPos);
 
@@ -136,4 +145,6 @@ void ModeState::render(sf::RenderWindow& window) {
         window.draw(*(btn.sprite));
         window.draw(btn.text);
     }
+
+    m_transition_.render(window);
 }

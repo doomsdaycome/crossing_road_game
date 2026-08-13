@@ -23,6 +23,12 @@ bool SaveGameRepository::save(const std::string& filepath, const GameSnapshot& s
             patternId = std::distance(patternList.begin(), it);
         }
 
+        json j_items = json::array();
+        for (const auto& item : lData.items) {
+            // Lưu dưới dạng mảng con [loại_vàng, tọa_độ_x]
+            j_items.push_back({ static_cast<int>(item.type), item.x }); 
+        }
+
         // [type, direction, y_position, speed_multiplier, spawn_timer, pattern_index, spawn_pattern, monsters_x]
         j_save["lanes"].push_back({
             static_cast<int>(lData.type),
@@ -32,7 +38,8 @@ bool SaveGameRepository::save(const std::string& filepath, const GameSnapshot& s
             lData.spawnTimer,
             lData.patternIndex,
             patternId,
-            lData.monsterPositionsX
+            lData.monsterPositionsX,
+            j_items
         });
     }
 
@@ -53,6 +60,10 @@ std::optional<GameSnapshot> SaveGameRepository::load(const std::string& filepath
     if (!file.is_open()) {
         std::cerr << "Loi: Khong the mo file save " << filepath << "\n";
         return std::nullopt;
+    }
+
+    if (file.peek() == std::ifstream::traits_type::eof()) {
+        return std::nullopt; 
     }
 
     try {
@@ -84,6 +95,14 @@ std::optional<GameSnapshot> SaveGameRepository::load(const std::string& filepath
             }
 
             lData.monsterPositionsX = j_lane[7].get<std::vector<float>>();
+            if (j_lane.size() > 8) {
+                for (const auto& j_item : j_lane[8]) {
+                    ItemData item;
+                    item.type = static_cast<ItemType>(j_item[0].get<int>());
+                    item.x = j_item[1].get<float>();
+                    lData.items.push_back(item);
+                }
+            }
 
             snapshot.lanes.push_back(lData);
         }

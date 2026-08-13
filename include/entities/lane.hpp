@@ -13,6 +13,13 @@ enum class LaneType {
     REST = 2 // MOI: lane "nghi chan" - KHONG nha quai, dung o dau Endless mode
 };
 
+enum class ItemType { COIN_1 = 1, COIN_3 = 2, TREASURE = 3 };
+
+struct ItemData {
+    ItemType type;
+    float x; // Tọa độ X cụ thể trên Lane
+};
+
 // DTO dung de luu/khoi phuc trang thai 1 Lane (Save/Load Game)
 struct LaneSaveData {
     LaneType type = LaneType::ROAD;
@@ -25,6 +32,7 @@ struct LaneSaveData {
     float spawnTimer = 0.f;
 
     std::vector<float> monsterPositionsX;
+    std::vector<ItemData> items;
 };
 
 class Lane {
@@ -54,6 +62,7 @@ public:
 
     // Can thiet cho CollisionSystem: cho phep "doc" danh sach quai ma khong sua duoc
     const std::vector<Monster>& getMonsters() const;
+    int collectItemAt(float playerX);
 
 private:
     void setupZombieAssets();
@@ -76,4 +85,5 @@ private:
     const sf::Texture* monsterTexture_ = nullptr;
 
     std::vector<Monster> monsters_;
+    std::vector<ItemData> items_;
 };

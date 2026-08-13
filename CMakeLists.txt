@@ -32,8 +32,8 @@ add_custom_command(
 add_custom_command(
     TARGET main POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_SOURCE_DIR}/save"
-    "$<TARGET_FILE_DIR:main>/save"
+    "${CMAKE_SOURCE_DIR}/data"
+    "$<TARGET_FILE_DIR:main>/data"
 )
 
 target_include_directories(main PRIVATE

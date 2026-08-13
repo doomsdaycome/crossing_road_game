@@ -1,5 +1,6 @@
 #pragma once
 #include "states/state.hpp"
+#include "gameplay/intro_cutscene.hpp"
 #include <memory>
 
 class LevelState : public State {
@@ -10,6 +11,11 @@ private:
     int m_currentPage_;
     int m_totalLevels_;
     int m_levelsPerPage_;
+
+    IntroCutscene m_transition_{true};
+    int m_selectedLevel_ = -1;
+
+    std::vector<sf::Text> m_coinTexts_;
 
     void buildLevelButtons();
 public:

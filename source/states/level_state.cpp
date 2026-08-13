@@ -1,6 +1,7 @@
 #include "states/level_state.hpp"
 #include "states/play_state.hpp"
 #include "services/resource_manager.hpp"
+#include "services/level_repository.hpp"
 #include "core/game.hpp"
 #include <iostream>
 #include <cmath>
@@ -21,6 +22,7 @@ LevelState::LevelState() {
 
 void LevelState::buildLevelButtons() {
     m_buttons_.clear(); // Xóa sạch các nút cũ nếu đang lật trang
+    m_coinTexts_.clear();
 
     const sf::Font& mainFont = ResourceManager::instance().getFont(Config::MAIN_FONT);
     
@@ -72,7 +74,32 @@ void LevelState::buildLevelButtons() {
         btn.actionValue = i;
 
         m_buttons_.push_back(std::move(btn));
+
+        std::string filepath = Config::LEVEL_PATH_PREFIX + std::to_string(i) + Config::LEVEL_PATH_SUFFIX;
+        
+        // Đọc file json lên để lấy collectedCoins và totalCoins
+        LevelData levelData = LevelRepository::loadLevel(filepath);
+
+        sf::Text coinText(mainFont);
+        coinText.setString(std::to_string(levelData.collectedCoins) + "/" + std::to_string(levelData.totalCoins));
+        coinText.setCharacterSize(22);
+        coinText.setFillColor(sf::Color::Yellow);
+        coinText.setOutlineColor(sf::Color::Black);
+        coinText.setOutlineThickness(2.f);
+        
+        // Căn giữa chữ
+        sf::FloatRect bounds = coinText.getLocalBounds();
+        coinText.setOrigin({
+            bounds.position.x + bounds.size.x / 2.f,
+            bounds.position.y + bounds.size.y / 2.f
+        });
+
+        // Đặt chữ nằm lùi xuống 65 pixel so với tâm của nút gỗ
+        coinText.setPosition({startX + col * gapX, startY + row * gapY + 65.f});
+        
+        m_coinTexts_.push_back(coinText);
     }
+
 
     // ==========================================
     // 2. KHỞI TẠO NÚT CHUYỂN TRANG (Phong cách Tối giản & Đồng bộ)
@@ -166,14 +193,7 @@ void LevelState::buildLevelButtons() {
 }
 
 void LevelState::processEvents(Game* game, const std::optional<sf::Event>& event) {
-    if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
-        if (keyPress->code == sf::Keyboard::Key::Escape) {
-            game->popState();
-            return;
-        }
-    }
-    
-    // Xử lý Click chuột (SFML 3.x)
+    if (m_transition_.isBusy()) return;
     if (const auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>()) {
         if (mouseEvent->button == sf::Mouse::Button::Left) {
             
@@ -185,9 +205,8 @@ void LevelState::processEvents(Game* game, const std::optional<sf::Event>& event
                     
                     switch (btn.action) {
                         case ButtonAction::SelectLevel:
-                            std::cout << "[LOG] Chon Level: " << btn.actionValue << "\n";
-                            // TẠM DÙNG: Đổi sang PlayingState, truyền GameMode và Level ID vào
-                            game->changeState(new PlayingState(GameMode::CLASSIC, btn.actionValue));
+                            m_transition_.startClosing();
+                            m_selectedLevel_ = btn.actionValue;
                             break;
                             
                         case ButtonAction::NextPage:
@@ -216,6 +235,15 @@ void LevelState::processEvents(Game* game, const std::optional<sf::Event>& event
 }
 
 void LevelState::update(Game* game, float dt) {
+    if (m_transition_.isBusy()) {
+        m_transition_.update(dt);
+        
+        if (m_transition_.isFinishedClosing()) {
+            game->changeState(new PlayingState(GameMode::CLASSIC, m_selectedLevel_), true);
+        }
+        return; // Đang đóng cửa thì ngừng update hiệu ứng nhấp nháy
+    }
+
     static float time = 0.f;
     time += dt;
 
@@ -284,4 +312,10 @@ void LevelState::render(sf::RenderWindow& window) {
         window.draw(*(btn.sprite));
         window.draw(btn.text);
     }
+
+    for (const auto& txt : m_coinTexts_) {
+        window.draw(txt);
+    }
+
+    m_transition_.render(window);
 }

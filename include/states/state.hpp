@@ -21,7 +21,22 @@ enum class ButtonAction {
     Endless,
     SelectLevel,
     NextPage,
-    PrevPage
+    PrevPage,
+    MusicUp,
+    MusicDown,
+    SfxUp,
+    SfxDown,
+    ThemePrev,
+    ThemeNext,
+    Home,
+    SaveGame,
+    Restart
+};
+
+
+enum class GameMode {
+    CLASSIC,
+    ENDLESS
 };
 
 // ==========================================

@@ -5,12 +5,8 @@
 #include "gameplay/lane_manager.hpp"
 #include "gameplay/camera_controller.hpp"
 #include "gameplay/score_manager.hpp"
+#include "gameplay/intro_cutscene.hpp"
 #include "data/game_snapshot.hpp"
-
-enum class GameMode {
-    CLASSIC,
-    ENDLESS
-};
 
 // ==========================================
 // PLAYING STATE
@@ -36,8 +32,27 @@ private:
     bool isGameStarted_ = false;
     bool isRedLight_ = false;
 
+    bool m_isMonsterDeath_ = false;
+    std::unique_ptr<sf::Text> m_fightEffect_;
+
+    std::unique_ptr<sf::Sprite> m_finishLineSprite_;
+    float m_finishLineY_; // Tọa độ Y của vạch đích
+    
+    bool m_isVictory_ = false;   // Cờ báo hiệu đã chạm đích
+    float m_victoryTimer_ = 0.f; // Thời gian chờ trước khi văng ra màn hình kết thúc
+
+    bool m_isCameraDeath_ = false;   // Cờ đánh dấu đang bị camera nuốt
+    float m_shakeTimer_ = 0.5f;      // Thời gian rung màn hình (0.5 giây)
+
+    LevelData m_currentLevelData_; 
+    int m_coinsCollectedInRun_ = 0; // Đếm số vàng ăn được trong ván này
+    int m_minGridY_ = 9999;
+
+    std::unique_ptr<sf::Text> m_hudText_;
+
     std::unique_ptr<sf::Sprite> m_topOverlaySprite_;
 
+    IntroCutscene m_introCutscene_;
     CameraController m_camera_;
     LaneManager m_laneManager_;
     Player m_player_;

@@ -56,12 +56,24 @@ public:
     ResourceManager(const ResourceManager&) = delete;
     ResourceManager& operator=(const ResourceManager&) = delete;
 
+    float getMusicVolume() const { return m_musicVolume_; }
+    void setMusicVolume(float volume) { 
+        m_musicVolume_ = std::clamp(volume, 0.f, 100.f); 
+        // [GỌI HÀM CẬP NHẬT sf::Music CỦA BẠN Ở ĐÂY NẾU CÓ]
+    }
+
+    float getSfxVolume() const { return m_sfxVolume_; }
+    void setSfxVolume(float volume) { 
+        m_sfxVolume_ = std::clamp(volume, 0.f, 100.f); 
+        // [GẬP NHẬT ÂM LƯỢNG CHO CÁC sf::Sound MÀ BẠN ĐANG PHÁT]
+    }
+
 private:
     ResourceManager() = default;
-    
-    // Đổi tên biến cũ cho rõ nghĩa hơn
+
     std::unordered_map<std::string, sf::Texture> textureCache_; 
+    std::unordered_map<std::string, sf::Font> fontCache_;      
     
-    // MỚI: Kho chứa Font
-    std::unordered_map<std::string, sf::Font> fontCache_;       
+    float m_musicVolume_ = 100.f;
+    float m_sfxVolume_ = 100.f;
 };

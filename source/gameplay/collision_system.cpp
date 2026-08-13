@@ -45,3 +45,17 @@ bool CollisionSystem::checkPlayerVsMonsters(const Player& player, const LaneMana
     return false; 
 }
 
+int CollisionSystem::checkAndCollectCoins(const Player& player, LaneManager& laneManager) {
+    // Lấy tọa độ thật của nhân vật
+    float pX = static_cast<float>(player.getGridX() * Config::TILE_SIZE);
+    float pY = static_cast<float>(player.getGridY() * Config::TILE_SIZE);
+
+    for (const auto& lanePtr : laneManager.getLanes()) {
+        // Tìm đúng cái Làn có tọa độ Y khớp với Y của nhân vật (sai số nhỏ hơn 5px)
+        if (std::abs(lanePtr->getYPosition() - pY) < 5.0f) {
+            // Nhờ Làn đó xử lý việc nhặt vàng và trả về kết quả
+            return lanePtr->collectItemAt(pX);
+        }
+    }
+    return 0;
+}

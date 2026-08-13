@@ -1,4 +1,5 @@
 #pragma once
+#include "data/level_data.hpp"
 
 class Player;
 class LaneManager;
@@ -12,6 +13,7 @@ class LaneManager;
 class CollisionSystem {
 public:
     static bool checkPlayerVsMonsters(const Player& player, const LaneManager& laneManager);
+    static int checkAndCollectCoins(const Player& player, LaneManager& laneManager);
 private:
     CollisionSystem() = delete;
 };

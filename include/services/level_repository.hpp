@@ -12,6 +12,7 @@
 class LevelRepository {
 public:
     static LevelData loadLevel(const std::string& filepath);
+    static bool saveLevel(const std::string& filepath, const LevelData& data);
 private:
     LevelRepository() = delete;
 };

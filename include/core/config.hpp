@@ -106,6 +106,8 @@ namespace Config {
     inline const std::string BTN_BLANK_TEXTURE   = "asset/images/ui/btn_blank.png";
     inline const std::string BTN_BLANK_SQUARE_TEXTURE = "asset/images/ui/btn_square.png";    
     inline const std::string BTN_START_TEXTURE   = "asset/images/ui/btn_start.png";
+    inline const std::string DOOR_LEFT_TEXTURE  = "asset/images/ui/door_left.png";
+    inline const std::string DOOR_RIGHT_TEXTURE = "asset/images/ui/door_right.png";
 
     // --- Thực thể & Môi trường ---
     inline const std::string PLAYER_TEXTURE      = "asset/images/entities/pl0.png"; // Hiệp sĩ
@@ -118,10 +120,16 @@ namespace Config {
     
     inline const std::string REST_LANE_TEXTURE   = "asset/images/world/ln2.png";    // Nền an toàn
 
+    inline const std::string FINISH_LINE_TEXTURE = "asset/images/world/bg2.png";
+
+    inline const std::string COIN_1_TEXTURE      = "asset/images/ui/item_coin_1.png";
+    inline const std::string COIN_3_TEXTURE      = "asset/images/ui/item_coin_3.png";
+    inline const std::string TREASURE_TEXTURE    = "asset/images/ui/item_treasure.png";
+
     // ==========================================
     // 9. DỮ LIỆU I/O (TỆP TIN LƯU TRỮ)
     // ==========================================
     inline const std::string LEVEL_PATH_PREFIX = "asset/levels/level_"; // Tiền tố load bản đồ Classic
     inline const std::string LEVEL_PATH_SUFFIX = ".json";               // Định dạng file bản đồ
-    inline const std::string DEFAULT_SAVE_PATH = "save/save_game.json"; // File lưu game
+    inline const std::string DEFAULT_SAVE_PATH = "data/save.json"; // File lưu game
 }

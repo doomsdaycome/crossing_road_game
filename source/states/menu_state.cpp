@@ -1,6 +1,7 @@
 #include "states/menu_state.hpp"
 #include "states/mode_state.hpp"
 #include "states/setting_state.hpp"
+#include "states/load_state.hpp"   
 #include "services/resource_manager.hpp"
 #include "core/game.hpp"
 #include <iostream>
@@ -80,6 +81,7 @@ void MenuState::processEvents(Game* game, const std::optional<sf::Event>& event)
                             game->pushState(new ModeState());
                             break;
                         case ButtonAction::Continue:
+                            game->pushState(new LoadState());
                             break;
                         case ButtonAction::Exit:
                             game->getWindow().close();

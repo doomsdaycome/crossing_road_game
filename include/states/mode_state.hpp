@@ -1,11 +1,15 @@
 #pragma once
 #include "states/state.hpp"
+#include "gameplay/intro_cutscene.hpp"
 #include <memory>
 
 class ModeState : public State {
 private:
     std::unique_ptr<sf::Sprite> m_bgMenu_;
     std::vector<UIButton> m_buttons_;
+
+    IntroCutscene m_transition_{true};
+    int m_selectedLevel_ = -1;
 public:
     ModeState();
     

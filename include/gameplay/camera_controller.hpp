@@ -23,6 +23,7 @@ public:
 
     float getTopEdge() const { return view_.getCenter().y - (view_.getSize().y / 2.f); }
     float getBottomEdge() const { return view_.getCenter().y + (view_.getSize().y / 2.f); }
+    void setCenterY(float y) { view_.setCenter({view_.getCenter().x, y}); }
 
 private:
     sf::View view_;

@@ -14,9 +14,6 @@
 // ==========================================
 class LaneManager {
 public:
-    // Khoi tao cho Classic mode: dung lane co dinh tu du lieu level
-    void buildFromLevel(const LevelData& levelData);
-
     // Khoi tao cho Endless mode: sinh san 1 luong lane ban dau
     void initEndless();
 

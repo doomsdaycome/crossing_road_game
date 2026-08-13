@@ -1,6 +1,7 @@
 #include "entities/lane.hpp"
 #include "core/config.hpp"
 #include "services/resource_manager.hpp"
+#include "utils/utils.hpp"
 #include <algorithm>
 #include <cstdlib>
 
@@ -45,7 +46,36 @@ Lane::Lane(LaneType type, float yPosition, int direction, float speedMultiplier,
     }
     if (bgSprite_) {
         bgSprite_->setPosition({0.f, yPosition_});
+    }
 
+    if (isEndlessMode && type_ != LaneType::REST) { 
+        
+        // Tỷ lệ xuất hiện: 35% cơ hội làn này sẽ đẻ ra vàng
+        if (std::rand() % 100 < 35) {
+            ItemData newItem;
+            
+            // Tỷ lệ độ hiếm: 70% Xu đơn (1đ), 25% Xu ba (3đ), 5% Rương (50đ)
+            int rollRate = std::rand() % 100;
+            if (rollRate < 70) {
+                newItem.type = ItemType::COIN_1;
+            } else if (rollRate < 95) {
+                newItem.type = ItemType::COIN_3;
+            } else {
+                newItem.type = ItemType::TREASURE;
+            }
+
+            // Random tọa độ X theo đúng chuẩn Lưới (Grid) để vàng nằm ngay ngắn giữa ô
+            // Giả sử lấy chiều rộng màn hình chia cho kích thước Tile để ra số cột
+            int totalColumns = static_cast<int>(Config::WINDOW_WIDTH / Config::TILE_SIZE);
+            
+            // Chừa lại 1 ô ở hai bên mép màn hình để vàng không bị rớt ra ngoài lề
+            int randomCol = 1 + std::rand() % (totalColumns - 2); 
+            
+            // Gán tọa độ X (Tọa độ Y thì tự động ăn theo yPosition_ của Làn lúc render rồi)
+            newItem.x = static_cast<float>(randomCol * Config::TILE_SIZE);
+
+            items_.push_back(newItem);
+        }
     }
 }
 
@@ -86,6 +116,8 @@ Lane::Lane(const LaneSaveData& saveData)
     for (float posX : saveData.monsterPositionsX) {
         monsters_.push_back(Monster(*monsterTexture_, posX, yPosition_, finalSpeed, direction_, monsterFrameCount_));
     }
+
+    items_ = saveData.items;
 }
 
 void Lane::setupZombieAssets() {
@@ -133,6 +165,8 @@ LaneSaveData Lane::exportSaveData() const {
     for (const auto& monster : monsters_) {
         data.monsterPositionsX.push_back(monster.getPositionX());
     }
+
+    data.items = items_;
 
     return data;
 }
@@ -209,6 +243,33 @@ void Lane::render(sf::RenderWindow& window) {
     if (bgSprite_) {
         window.draw(*bgSprite_);
     }
+
+    const sf::Texture& coin1Tex = ResourceManager::instance().getTexture(Config::COIN_1_TEXTURE);
+    const sf::Texture& coin3Tex = ResourceManager::instance().getTexture(Config::COIN_3_TEXTURE);
+    const sf::Texture& chestTex = ResourceManager::instance().getTexture(Config::TREASURE_TEXTURE);
+
+    std::unique_ptr<sf::Sprite> itemSprite;
+
+    for (const auto& item : items_) {
+        // Chọn Texture tương ứng với loại Vàng
+        if (item.type == ItemType::COIN_1) {
+            itemSprite = std::make_unique<sf::Sprite>(coin1Tex);
+        } else if (item.type == ItemType::COIN_3) {
+            itemSprite = std::make_unique<sf::Sprite>(coin3Tex);
+        } else if (item.type == ItemType::TREASURE) {
+            itemSprite = std::make_unique<sf::Sprite>(chestTex);
+        }
+
+        // Căn giữa Sprite để đặt tọa độ cho dễ
+        centerOrigin(*(itemSprite));
+
+        // Đặt tọa độ (item.x là hoành độ đã lưu, m_yPosition_ là tung độ của Làn)
+        // Cộng thêm nửa TILE_SIZE để Vàng nằm lọt thỏm chính giữa ô vuông của Làn
+        itemSprite->setPosition({item.x + Config::TILE_SIZE / 2.f, yPosition_ + Config::TILE_SIZE / 2.f});
+
+        window.draw(*(itemSprite));
+    }
+
     for (auto& monster : monsters_) {
         monster.render(window);
     }
@@ -217,3 +278,26 @@ void Lane::render(sf::RenderWindow& window) {
 float Lane::getYPosition() const { return yPosition_; }
 LaneType Lane::getType() const { return type_; }
 const std::vector<Monster>& Lane::getMonsters() const { return monsters_; }
+
+int Lane::collectItemAt(float playerX) {
+    for (auto it = items_.begin(); it != items_.end(); ) {
+        // Kiểm tra khoảng cách: Nếu nhân vật đứng gần cục vàng (trong phạm vi nửa ô)
+        if (std::abs(it->x - playerX) < Config::TILE_SIZE / 2.0f) {
+            int earned = 0;
+            if (it->type == ItemType::COIN_1) earned = 1;
+            else if (it->type == ItemType::COIN_3) earned = 3;
+            else if (it->type == ItemType::TREASURE) earned = 50;
+
+            // Xóa ngay lập tức khỏi mảng -> Tự động biến mất khỏi màn hình ở frame sau!
+            it = items_.erase(it); 
+            
+            // Có thể thêm âm thanh ting ting ở đây
+            // ResourceManager::instance().playSound("coin_sfx");
+            
+            return earned; // Trả về số tiền ăn được
+        } else {
+            ++it;
+        }
+    }
+    return 0; // Không chạm cục nào
+}

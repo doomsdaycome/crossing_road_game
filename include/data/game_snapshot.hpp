@@ -10,4 +10,6 @@ struct GameSnapshot {
     int playerGridX = 0;
     int playerGridY = 0;
     std::vector<LaneSaveData> lanes;
+    float cameraY = 0.f; 
+    int coinsInRun = 0;
 };

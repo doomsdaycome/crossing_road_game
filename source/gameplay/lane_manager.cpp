@@ -3,19 +3,6 @@
 #include <algorithm>
 #include <cstdlib>
 
-void LaneManager::buildFromLevel(const LevelData& levelData) {
-    float currentY = Config::VIEW_HEIGHT - Config::LANE_HEIGHT;
-    for (const auto& row : levelData.mapMatrix) {
-        if (row.empty()) continue;
-
-        LaneType type = (row[0] == 0) ? LaneType::ROAD : LaneType::GRASS;
-        int randomDir = (rand() % 2 == 0) ? 1 : -1;
-
-        lanes_.push_back(std::make_unique<Lane>(type, currentY, randomDir, 1.0f, false));
-        currentY -= Config::LANE_HEIGHT;
-    }
-}
-
 void LaneManager::initBackground(float startY) {
     // Lấy ảnh nền tổng
     const sf::Texture& texture = ResourceManager::instance().getTexture(Config::BG_TEXTURE);
