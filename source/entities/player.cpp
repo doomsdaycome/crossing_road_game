@@ -1,26 +1,23 @@
 #include "entities/player.hpp"
 #include "services/resource_manager.hpp"
 #include "core/config.hpp"
+#include "utils/utils.hpp"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
-
-void centerOrigin(sf::Sprite& sprite) {
-    sf::FloatRect bounds = sprite.getLocalBounds();
-    sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
-}
 
 Player::Player() : m_speed_(Config::PLAYER_SPEED), m_isAlive_(true), m_isMoving_(false) {
     m_tileSize_ = Config::TILE_SIZE;
     m_gridX_ = Config::PLAYER_START_GRID_X;
     m_gridY_ = Config::PLAYER_START_GRID_Y;
 
+    // Tính toán tọa độ tâm của ô
     m_targetPos_ = {
         m_gridX_ * m_tileSize_ + (m_tileSize_ / 2),
         m_gridY_ * m_tileSize_ + (m_tileSize_ / 2)
     };
 
-    // FIX: khong con tu goi loadFromFile() - lay texture da cache tu ResourceManager
+    // Lấy texture đã cache từ ResourceManager
     const sf::Texture& texture = ResourceManager::instance().getTexture(Config::PLAYER_TEXTURE);
 
     m_sprite_ = std::make_unique<sf::Sprite>(texture);
@@ -29,18 +26,18 @@ Player::Player() : m_speed_(Config::PLAYER_SPEED), m_isAlive_(true), m_isMoving_
 }
 
 void Player::processEvents(const std::optional<sf::Event>& event) {
-    if (!m_isAlive_) return; // Chet roi thi mien thao tac
+    // 1. Kiểm tra trạng thái: Chết hoặc đang bay trên không thì bỏ qua toàn bộ phím bấm
+    if (!m_isAlive_) return; 
+    
+    // FIX: Xóa đoạn code teleport cũ. Giờ đang di chuyển là KHÔNG nhận phím!
+    if (m_isMoving_) return; 
 
     if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
-        if (m_isMoving_) {
-            m_sprite_->setPosition(m_targetPos_);
-            m_isMoving_ = false;
-        }
-
         bool hasInput = false;
         int nextGridX = m_gridX_;
         int nextGridY = m_gridY_;
 
+        // 2. Bắt hướng di chuyển
         if (keyPress->code == sf::Keyboard::Key::W || keyPress->code == sf::Keyboard::Key::Up) {
             nextGridY -= 1;
             hasInput = true;
@@ -58,41 +55,53 @@ void Player::processEvents(const std::optional<sf::Event>& event) {
             hasInput = true;
         }
 
-        // FIX: gioi han bien ban do theo chieu ngang (ban goc co the di ra ngoai vo han)
+        // 3. Khóa biên màn hình để không chạy ra ngoài (Giữ nguyên logic cực chuẩn của ông)
         nextGridX = std::clamp(nextGridX, Config::PLAYER_MIN_GRID_X, Config::PLAYER_MAX_GRID_X);
 
+        // 4. Nếu có phím hợp lệ và thực sự có sự thay đổi ô grid
         if (hasInput && (nextGridX != m_gridX_ || nextGridY != m_gridY_)) {
             m_gridX_ = nextGridX;
             m_gridY_ = nextGridY;
+            
+            // Cập nhật đích đến
             m_targetPos_ = {
                 m_gridX_ * m_tileSize_ + (m_tileSize_ / 2),
                 m_gridY_ * m_tileSize_ + (m_tileSize_ / 2)
             };
+            
+            // Bật cờ khóa phím, bắt đầu hành trình lết tới đích
             m_isMoving_ = true;
+            
+            // [Gợi ý] Ông có thể mở comment dòng này để có tiếng lết/nhảy
+            // ResourceManager::instance().playSound("sfx_jump");
         }
     }
 }
 
 void Player::update(float dt) {
-    if (m_isMoving_) {
-        sf::Vector2f currentPos = m_sprite_->getPosition();
+    // Nếu đang đứng yên thì khỏi tính toán mất công
+    if (!m_isMoving_) return; 
 
-        float dx = m_targetPos_.x - currentPos.x;
-        float dy = m_targetPos_.y - currentPos.y;
-        float distance = std::sqrt(dx * dx + dy * dy);
+    sf::Vector2f currentPos = m_sprite_->getPosition();
 
-        float moveStep = m_speed_ * dt;
+    // Tính vector hướng và khoảng cách
+    float dx = m_targetPos_.x - currentPos.x;
+    float dy = m_targetPos_.y - currentPos.y;
+    float distance = std::sqrt(dx * dx + dy * dy);
 
-        if (distance > moveStep) {
-            float moveX = (dx / distance) * moveStep;
-            float moveY = (dy / distance) * moveStep;
+    // Quãng đường đi được trong frame này (đã được làm chậm nếu mắt mở)
+    float moveStep = m_speed_ * dt;
 
-            m_sprite_->move({moveX, moveY});
-        }
-        else {
-            m_sprite_->setPosition(m_targetPos_);
-            m_isMoving_ = false;
-        }
+    if (distance <= moveStep) {
+        // ĐÃ TỚI ĐÍCH: Snap cho khớp ô và mở khóa phím
+        m_sprite_->setPosition(m_targetPos_);
+        m_isMoving_ = false;
+    }
+    else {
+        // ĐANG TRÊN ĐƯỜNG: Đi tiếp theo tỷ lệ khoảng cách
+        float moveX = (dx / distance) * moveStep;
+        float moveY = (dy / distance) * moveStep;
+        m_sprite_->move({moveX, moveY});
     }
 }
 
@@ -126,7 +135,9 @@ bool Player::isAlive() const {
 }
 
 void Player::die() {
-    if (!m_isAlive_) return; // tranh goi callback nhieu lan neu die() bi goi lap
+    // Khóa chống spam callback (ví dụ va chạm quái nhiều lần trong 1 frame)
+    if (!m_isAlive_) return; 
+    
     m_isAlive_ = false;
     if (m_onDeath_) {
         m_onDeath_();

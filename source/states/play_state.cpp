@@ -64,6 +64,8 @@ PlayingState::PlayingState(GameMode gameMode, int level) {
     // Nạp Kỷ lục & Lưu mốc Y ban đầu cho cả 2 mode
     m_score_.loadHighScore();
     m_minGridY_ = m_player_.getGridY();
+
+    ResourceManager::instance().playMusic(Config::BGM_PLAYING);
 }
 
 // ==========================================
@@ -103,6 +105,8 @@ PlayingState::PlayingState(const GameSnapshot& snapshot) {
 
     m_score_.loadHighScore();
     m_minGridY_ = m_player_.getGridY();
+
+    ResourceManager::instance().playMusic(Config::BGM_PLAYING);
 }
 
 // ==========================================
@@ -138,11 +142,6 @@ void PlayingState::processEvents(Game* game, const std::optional<sf::Event>& eve
             keyPress->code == sf::Keyboard::Key::S || keyPress->code == sf::Keyboard::Key::Down) 
         {
             if (!isGameStarted_) isGameStarted_ = true;
-        }
-
-        // Phím tắt bật/tắt đèn đỏ
-        if (keyPress->code == sf::Keyboard::Key::T) {
-            isRedLight_ = !isRedLight_;
         }
     }
     m_player_.processEvents(event);
@@ -214,7 +213,14 @@ void PlayingState::update(Game* game, float dt) {
     // ==========================================
     // KHỐI LOGIC 3: GAMEPLAY CHÍNH
     // ==========================================
-    m_player_.update(dt);
+    m_giantEye.update(dt);
+
+    bool isRedLight = m_giantEye.isRedLightActive();
+
+    float slowMoFactor = isRedLight ? 0.4f : 1.0f;
+    float scaledDt = dt * slowMoFactor;
+
+    m_player_.update(scaledDt);
 
     // XUỐNG DÒNG VÀNG: Mở khóa logic nhặt vàng cho CẢ 2 CHẾ ĐỘ
     m_coinsCollectedInRun_ += CollisionSystem::checkAndCollectCoins(m_player_, m_laneManager_);
@@ -249,7 +255,6 @@ void PlayingState::update(Game* game, float dt) {
     }
 
     // --- Cập nhật Camera và Làn đường ---
-    // --- Cập nhật Camera và Làn đường ---
     if (isGameStarted_) {
         bool shouldScrollCamera = true;
         
@@ -279,12 +284,12 @@ void PlayingState::update(Game* game, float dt) {
                 camSpeed *= 2.5f; 
             }
 
-            m_camera_.update(dt, camSpeed);
+            m_camera_.update(scaledDt, camSpeed);
         }
     }
 
     bool isEndless = (m_mode_ == GameMode::ENDLESS);
-    m_laneManager_.update(dt, isEndless, m_camera_.getTopEdge(), m_camera_.getBottomEdge(), isRedLight_);
+    m_laneManager_.update(dt, isEndless, m_camera_.getTopEdge(), m_camera_.getBottomEdge(), isRedLight);
 
     // --- Kiểm tra Va chạm Gây chết ---
     if (CollisionSystem::checkPlayerVsMonsters(m_player_, m_laneManager_)) {
@@ -340,6 +345,7 @@ void PlayingState::render(sf::RenderWindow& window) {
     if (m_hudText_ && !m_introCutscene_.isBusy()) {
         window.draw(*m_hudText_);
     }
+    m_giantEye.render(window);
 
     m_introCutscene_.render(window);
 }

@@ -5,9 +5,6 @@
 #include <optional>
 #include <functional>
 
-// Ham tien ich: dat origin cua sprite vao chinh giua (dung o nhieu entity)
-void centerOrigin(sf::Sprite& sprite);
-
 class Player {
 private:
     std::unique_ptr<sf::Sprite> m_sprite_;

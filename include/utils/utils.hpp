@@ -24,7 +24,7 @@ bool isClicked(const T& object, sf::Vector2f mouseWorldPos) {
 /// <typeparam name="T">Kiểu vật thể (sf::Text, sf::Sprite, sf::RectangleShape...)</typeparam>
 /// <param name="object">Vật thể cần dời tâm</param>
 template <typename T>
-void centerOrigin(T& object) {
+inline void centerOrigin(T& object) {
     // Phải dùng getLocalBounds() thay vì getGlobalBounds() để lấy kích thước gốc nguyên bản
     sf::FloatRect bounds = object.getLocalBounds();
     

@@ -63,6 +63,22 @@ SettingState::SettingState(bool isFromGameplay, GameSnapshot snapshot)
     musicUpBtn.action = ButtonAction::MusicUp;
     m_buttons_.push_back(std::move(musicUpBtn));
 
+    // Nút Tắt/Bật nhanh Music (Mute)
+    UIButton musicMuteBtn(mainFont);
+    musicMuteBtn.sprite = std::make_unique<sf::Sprite>(squareTex);
+    centerOrigin(*(musicMuteBtn.sprite));
+    musicMuteBtn.sprite->setPosition({centerX + 350.f, startY + 20.f}); // Nằm bên phải nút >
+    
+    float initMusicVol = ResourceManager::instance().getMusicVolume();
+    musicMuteBtn.text.setString(initMusicVol > 0.f ? "M" : "X");
+    musicMuteBtn.text.setCharacterSize(35);
+    musicMuteBtn.text.setFillColor(darkBrown);
+    centerOrigin(musicMuteBtn.text);
+    musicMuteBtn.text.setPosition({centerX + 350.f, startY + 20.f});
+    
+    musicMuteBtn.action = ButtonAction::MusicMute;
+    m_buttons_.push_back(std::move(musicMuteBtn));
+
 
     // ==========================================
     // HÀNG 2: ĐIỀU CHỈNH SFX
@@ -111,6 +127,22 @@ SettingState::SettingState(bool isFromGameplay, GameSnapshot snapshot)
     musicUpBtn.text.setFillColor(darkBrown);
     sfxDownBtn.text.setFillColor(darkBrown);
     sfxUpBtn.text.setFillColor(darkBrown);
+
+    // Nút Tắt/Bật nhanh SFX (Mute)
+    UIButton sfxMuteBtn(mainFont);
+    sfxMuteBtn.sprite = std::make_unique<sf::Sprite>(squareTex);
+    centerOrigin(*(sfxMuteBtn.sprite));
+    sfxMuteBtn.sprite->setPosition({centerX + 350.f, startY + gapY + 20.f});
+    
+    float initSfxVol = ResourceManager::instance().getSfxVolume();
+    sfxMuteBtn.text.setString(initSfxVol > 0.f ? "M" : "X");
+    sfxMuteBtn.text.setCharacterSize(35);
+    sfxMuteBtn.text.setFillColor(darkBrown);
+    centerOrigin(sfxMuteBtn.text);
+    sfxMuteBtn.text.setPosition({centerX + 350.f, startY + gapY + 20.f});
+    
+    sfxMuteBtn.action = ButtonAction::SfxMute;
+    m_buttons_.push_back(std::move(sfxMuteBtn));
 
     // ==========================================
     // HÀNG 3: CHỌN THEME (GIAO DIỆN)
@@ -237,7 +269,7 @@ void SettingState::processEvents(Game* game, const std::optional<sf::Event>& eve
             sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(mouseEvent->position);
             auto& rm = ResourceManager::instance();
 
-            for (const auto& btn : m_buttons_) {
+            for (auto& btn : m_buttons_) {
                 if (isClicked(*(btn.sprite), worldPos)) {
                     
                     float currentVol;
@@ -248,6 +280,15 @@ void SettingState::processEvents(Game* game, const std::optional<sf::Event>& eve
                             rm.setMusicVolume(currentVol);
                             m_musicValueText_->setString(std::to_string((int)rm.getMusicVolume()) + "%");
                             centerOrigin(*m_musicValueText_);
+                            
+                            // ĐỒNG BỘ NÚT MUTE: Tìm nút Mute và đổi chữ nếu về 0
+                            for (auto& b : m_buttons_) {
+                                if (b.action == ButtonAction::MusicMute) {
+                                    b.text.setString(rm.getMusicVolume() > 0.f ? "M" : "X");
+                                    centerOrigin(b.text);
+                                    break;
+                                }
+                            }
                             break;
                             
                         case ButtonAction::MusicUp:
@@ -255,18 +296,81 @@ void SettingState::processEvents(Game* game, const std::optional<sf::Event>& eve
                             rm.setMusicVolume(currentVol);
                             m_musicValueText_->setString(std::to_string((int)rm.getMusicVolume()) + "%");
                             centerOrigin(*m_musicValueText_);
+
+                            // ĐỒNG BỘ NÚT MUTE: Tìm nút Mute và đổi chữ nếu > 0
+                            for (auto& b : m_buttons_) {
+                                if (b.action == ButtonAction::MusicMute) {
+                                    b.text.setString(rm.getMusicVolume() > 0.f ? "M" : "X");
+                                    centerOrigin(b.text);
+                                    break;
+                                }
+                            }
                             break;
 
+                        case ButtonAction::MusicMute:
+                            currentVol = rm.getMusicVolume();
+                            if (currentVol > 0.f) {
+                                m_lastMusicVol_ = currentVol;
+                                rm.setMusicVolume(0.f);
+                                btn.text.setString("X");
+                            } else {
+                                // NẾU BẬT LẠI MÀ ÂM LƯỢNG CŨ LÀ 0, THÌ GÁN LÊN 10%
+                                rm.setMusicVolume(m_lastMusicVol_ > 0.f ? m_lastMusicVol_ : 1.f);
+                                btn.text.setString("M");
+                            }
+                            centerOrigin(btn.text);
+                            
+                            m_musicValueText_->setString(std::to_string((int)rm.getMusicVolume()) + "%");
+                            centerOrigin(*m_musicValueText_);
+                            break;
+
+
+                        // ==========================================
+                        // XỬ LÝ SFX (Y chang Music)
+                        // ==========================================
                         case ButtonAction::SfxDown:
                             currentVol = rm.getSfxVolume() - 10.f;
                             rm.setSfxVolume(currentVol);
                             m_sfxValueText_->setString(std::to_string((int)rm.getSfxVolume()) + "%");
                             centerOrigin(*m_sfxValueText_);
+                            
+                            for (auto& b : m_buttons_) {
+                                if (b.action == ButtonAction::SfxMute) {
+                                    b.text.setString(rm.getSfxVolume() > 0.f ? "M" : "X");
+                                    centerOrigin(b.text);
+                                    break;
+                                }
+                            }
                             break;
 
                         case ButtonAction::SfxUp:
                             currentVol = rm.getSfxVolume() + 10.f;
                             rm.setSfxVolume(currentVol);
+                            m_sfxValueText_->setString(std::to_string((int)rm.getSfxVolume()) + "%");
+                            centerOrigin(*m_sfxValueText_);
+                            
+                            for (auto& b : m_buttons_) {
+                                if (b.action == ButtonAction::SfxMute) {
+                                    b.text.setString(rm.getSfxVolume() > 0.f ? "M" : "X");
+                                    centerOrigin(b.text);
+                                    break;
+                                }
+                            }
+                            break;
+
+                        case ButtonAction::SfxMute:
+                            currentVol = rm.getSfxVolume();
+                            if (currentVol > 0.f) {
+                                m_lastSfxVol_ = currentVol;
+                                rm.setSfxVolume(0.f);
+                                btn.text.setString("X");
+                            } else {
+                                // GÁN LÊN 10% NẾU CŨ BỊ ÉP VỀ 0
+                                rm.setSfxVolume(m_lastSfxVol_ > 0.f ? m_lastSfxVol_ : 1.f);
+                                btn.text.setString("M");
+                            }
+                            centerOrigin(btn.text);
+                            
                             m_sfxValueText_->setString(std::to_string((int)rm.getSfxVolume()) + "%");
                             centerOrigin(*m_sfxValueText_);
                             break;

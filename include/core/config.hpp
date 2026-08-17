@@ -126,6 +126,17 @@ namespace Config {
     inline const std::string COIN_3_TEXTURE      = "asset/images/ui/item_coin_3.png";
     inline const std::string TREASURE_TEXTURE    = "asset/images/ui/item_treasure.png";
 
+    // --- Nhạc & SFX ---
+    inline const std::string BG_MUSIC            = "asset/audio/bg_music.ogg";
+    inline const std::string BGM_PLAYING         = "asset/audio/pl_music.ogg";
+
+    inline const std::string EYE_FRAME_0 = "asset/images/entities/Sharinga/eye_frame_0.png";
+    inline const std::string EYE_FRAME_1 = "asset/images/entities/Sharinga/eye_frame_1.png";
+    inline const std::string EYE_FRAME_2 = "asset/images/entities/Sharinga/eye_frame_2.png";
+    inline const std::string EYE_FRAME_3 = "asset/images/entities/Sharinga/eye_frame_3.png";
+    inline const std::string EYE_FRAME_4 = "asset/images/entities/Sharinga/eye_frame_4.png";
+    inline const std::string EYE_FRAME_5 = "asset/images/entities/Sharinga/eye_frame_5.png";
+
     // ==========================================
     // 9. DỮ LIỆU I/O (TỆP TIN LƯU TRỮ)
     // ==========================================

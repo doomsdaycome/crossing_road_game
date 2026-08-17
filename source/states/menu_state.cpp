@@ -1,7 +1,8 @@
 #include "states/menu_state.hpp"
 #include "states/mode_state.hpp"
 #include "states/setting_state.hpp"
-#include "states/load_state.hpp"   
+#include "states/load_state.hpp"
+#include "states/scoreboard_state.hpp"   
 #include "services/resource_manager.hpp"
 #include "core/game.hpp"
 #include <iostream>
@@ -9,6 +10,7 @@
 #include <cstdlib>
 
 MenuState::MenuState() {
+    ResourceManager::instance().playMusic(Config::BG_MUSIC);
     const auto& bgTex = ResourceManager::instance().getTexture(Config::MENU_BG_TEXTURE);
     m_bgMenu_ = std::make_unique<sf::Sprite>(bgTex);
     m_bgMenu_->setPosition({0.f, 0.f});
@@ -89,6 +91,8 @@ void MenuState::processEvents(Game* game, const std::optional<sf::Event>& event)
                         case ButtonAction::Option:
                             game->pushState(new SettingState());
                             break;
+                        case ButtonAction::Scoreboard:
+                            game->pushState(new ScoreboardState());
                         default:
                             break;
                     }

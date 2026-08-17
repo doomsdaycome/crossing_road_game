@@ -30,7 +30,9 @@ enum class ButtonAction {
     ThemeNext,
     Home,
     SaveGame,
-    Restart
+    Restart,
+    MusicMute,
+    SfxMute
 };
 
 

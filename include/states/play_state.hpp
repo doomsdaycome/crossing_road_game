@@ -2,6 +2,7 @@
 
 #include "states/state.hpp"
 #include "entities/player.hpp"
+#include "entities/giant_eye.hpp"
 #include "gameplay/lane_manager.hpp"
 #include "gameplay/camera_controller.hpp"
 #include "gameplay/score_manager.hpp"
@@ -30,7 +31,6 @@ private:
     GameMode m_mode_;
     int m_currentLevel_;
     bool isGameStarted_ = false;
-    bool isRedLight_ = false;
 
     bool m_isMonsterDeath_ = false;
     std::unique_ptr<sf::Text> m_fightEffect_;
@@ -57,4 +57,5 @@ private:
     LaneManager m_laneManager_;
     Player m_player_;
     ScoreManager m_score_;
+    GiantEye m_giantEye;
 };

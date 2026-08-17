@@ -16,6 +16,8 @@ private:
     std::unique_ptr<sf::Text> m_themeValueText_;
 
     bool m_isFromGameplay_;
+    float m_lastMusicVol_ = 100.f;
+    float m_lastSfxVol_ = 100.f;
     GameSnapshot m_currentSnapshot_;
 
     int m_themeIndex_ = 0;
