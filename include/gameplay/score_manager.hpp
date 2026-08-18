@@ -1,6 +1,18 @@
 #pragma once
 #include <fstream>
 #include <algorithm>
+#include <sstream>
+#include <iterator>
+#include <cctype>
+
+inline std::string xorEncryptDecryptScore(const std::string& input) {
+    std::string key = "CROSSING_ROAD_SECRET_2026";
+    std::string output = input;
+    for (size_t i = 0; i < input.size(); ++i) {
+        output[i] = input[i] ^ key[i % key.length()];
+    }
+    return output;
+}
 
 // ==========================================
 // SCORE MANAGER (ĐÃ NÂNG CẤP KỶ LỤC)
@@ -35,14 +47,26 @@ public:
 
     // ĐỌC CẢ ĐIỂM, VÀNG, SKIN
     void loadHighScore() {
-        std::ifstream file("data/highscore.txt");
+        std::ifstream file("data/highscore.txt", std::ios::binary);
         if (file.is_open()) {
-            file >> bestScore_ >> totalCoins_;
-            if (!(file >> equippedSkin_ >> unlockedSkins_)) {
+            std::string fileData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            std::string parsedData = fileData;
+            
+            size_t firstNonWhitespace = fileData.find_first_not_of(" \t\n\r");
+            if (firstNonWhitespace != std::string::npos && (std::isdigit(fileData[firstNonWhitespace]) || fileData[firstNonWhitespace] == '-')) {
+                // File cũ chưa mã hóa
+            } else {
+                parsedData = xorEncryptDecryptScore(fileData);
+            }
+
+            std::stringstream ss(parsedData);
+            
+            ss >> bestScore_ >> totalCoins_;
+            if (!(ss >> equippedSkin_ >> unlockedSkins_)) {
                 equippedSkin_ = 0;
                 unlockedSkins_ = 1; // Bitmask: skin 0 is unlocked
             }
-            if (!(file >> magnetCount_ >> shieldCount_ >> invisCount_ >> novaCount_)) {
+            if (!(ss >> magnetCount_ >> shieldCount_ >> invisCount_ >> novaCount_)) {
                 magnetCount_ = 0;
                 shieldCount_ = 0;
                 invisCount_ = 0;
@@ -63,10 +87,15 @@ public:
 
     // GHI CẢ ĐIỂM, VÀNG, SKIN
     void saveHighScore() const {
-        std::ofstream file("data/highscore.txt");
+        std::ofstream file("data/highscore.txt", std::ios::binary);
         if (file.is_open()) {
-            file << bestScore_ << " " << totalCoins_ << " " << equippedSkin_ << " " << unlockedSkins_ << " "
+            std::stringstream ss;
+            ss << bestScore_ << " " << totalCoins_ << " " << equippedSkin_ << " " << unlockedSkins_ << " "
                  << magnetCount_ << " " << shieldCount_ << " " << invisCount_ << " " << novaCount_;
+                 
+            std::string rawData = ss.str();
+            std::string encryptedData = xorEncryptDecryptScore(rawData);
+            file.write(encryptedData.data(), encryptedData.size());
             file.close();
         }
     }

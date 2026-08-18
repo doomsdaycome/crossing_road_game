@@ -1,18 +1,30 @@
 #include "services/level_repository.hpp"
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <algorithm> // Để dùng std::find
 #include "utils/json.hpp"
 #include "core/config.hpp"
 
 using json = nlohmann::json;
 
+namespace {
+    std::string xorEncryptDecrypt(const std::string& input) {
+        std::string key = "CROSSING_ROAD_SECRET_2026";
+        std::string output = input;
+        for (size_t i = 0; i < input.size(); ++i) {
+            output[i] = input[i] ^ key[i % key.length()];
+        }
+        return output;
+    }
+}
+
 // ==========================================
 // ĐỌC FILE LEVEL (Tương tự Load SaveGame)
 // ==========================================
 LevelData LevelRepository::loadLevel(const std::string& filepath) {
     LevelData data;
-    std::ifstream file(filepath);
+    std::ifstream file(filepath, std::ios::binary);
 
     if (!file.is_open()) {
         std::cerr << "Loi: Khong the mo file JSON " << filepath << "\n";
@@ -20,8 +32,18 @@ LevelData LevelRepository::loadLevel(const std::string& filepath) {
     }
 
     try {
+        std::string fileData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        
         json j;
-        file >> j;
+        size_t firstNonWhitespace = fileData.find_first_not_of(" \t\n\r");
+        if (firstNonWhitespace != std::string::npos && (fileData[firstNonWhitespace] == '{' || fileData[firstNonWhitespace] == '[')) {
+            // File không bị mã hóa (được người dùng tự thiết kế)
+            j = json::parse(fileData);
+        } else {
+            // File đã bị mã hóa
+            std::string decryptedData = xorEncryptDecrypt(fileData);
+            j = json::parse(decryptedData);
+        }
 
         if (j.contains("name")) data.name = j["name"].get<std::string>();
         if (j.contains("collected_coins")) data.collectedCoins = j["collected_coins"].get<int>();
@@ -117,13 +139,15 @@ bool LevelRepository::saveLevel(const std::string& filepath, const LevelData& da
         });
     }
 
-    std::ofstream file(filepath);
+    std::ofstream file(filepath, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Loi: Khong the ghi de file JSON " << filepath << "\n";
         return false;
     }
 
-    file << j_save.dump(4);
+    std::string rawJson = j_save.dump();
+    std::string encryptedData = xorEncryptDecrypt(rawJson);
+    file.write(encryptedData.data(), encryptedData.size());
     file.close();
     return true;
 }

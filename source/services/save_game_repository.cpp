@@ -1,10 +1,22 @@
 #include "services/save_game_repository.hpp"
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include "utils/json.hpp"
 #include "core/config.hpp"
 
 using json = nlohmann::json;
+
+namespace {
+    std::string xorEncryptDecrypt(const std::string& input) {
+        std::string key = "CROSSING_ROAD_SECRET_2026";
+        std::string output = input;
+        for (size_t i = 0; i < input.size(); ++i) {
+            output[i] = input[i] ^ key[i % key.length()];
+        }
+        return output;
+    }
+}
 
 bool SaveGameRepository::save(const std::string& filepath, const GameSnapshot& snapshot) {
     json j_save;
@@ -45,19 +57,21 @@ bool SaveGameRepository::save(const std::string& filepath, const GameSnapshot& s
     }
 
     // TODO (CHANGE PATH/VALUE): dam bao thu muc cha cua filepath da ton tai truoc khi ghi file
-    std::ofstream file(filepath);
+    std::ofstream file(filepath, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Loi: Khong the tao file save tai " << filepath << "\n";
         return false;
     }
 
-    file << j_save.dump(4);
+    std::string rawJson = j_save.dump();
+    std::string encryptedData = xorEncryptDecrypt(rawJson);
+    file.write(encryptedData.data(), encryptedData.size());
     file.close();
     return true;
 }
 
 std::optional<GameSnapshot> SaveGameRepository::load(const std::string& filepath) {
-    std::ifstream file(filepath);
+    std::ifstream file(filepath, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Loi: Khong the mo file save " << filepath << "\n";
         return std::nullopt;
@@ -68,8 +82,9 @@ std::optional<GameSnapshot> SaveGameRepository::load(const std::string& filepath
     }
 
     try {
-        json j;
-        file >> j;
+        std::string fileData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        std::string decryptedData = xorEncryptDecrypt(fileData);
+        json j = json::parse(decryptedData);
 
         GameSnapshot snapshot;
         snapshot.score = j["player"]["score"].get<int>();

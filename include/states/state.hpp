@@ -20,6 +20,7 @@ enum class ButtonAction {
     Classic,
     Endless,
     SelectLevel,
+    Tutorial,
     NextPage,
     PrevPage,
     MusicUp,

@@ -4,6 +4,7 @@
 #include "states/load_state.hpp"
 #include "states/scoreboard_state.hpp"  
 #include "states/shop_state.hpp"
+#include "states/tutorial_state.hpp"
 #include "services/resource_manager.hpp"
 #include "core/game.hpp"
 #include <iostream>
@@ -29,6 +30,7 @@ MenuState::MenuState() {
         {Config::BTN_BLANK_TEXTURE, "CONTINUE", ButtonAction::Continue},
         {Config::BTN_BLANK_TEXTURE, "SHOP", ButtonAction::Shop},
         {Config::BTN_BLANK_TEXTURE, "SCORE BOARD", ButtonAction::Scoreboard},
+        {Config::BTN_BLANK_TEXTURE, "TUTORIAL", ButtonAction::Tutorial},
         {Config::BTN_BLANK_TEXTURE, "OPTION", ButtonAction::Option},
         {Config::BTN_BLANK_TEXTURE, "EXIT", ButtonAction::Exit}
     };
@@ -97,6 +99,9 @@ void MenuState::processEvents(Game* game, const std::optional<sf::Event>& event)
                             break;
                         case ButtonAction::Scoreboard:
                             game->pushState(new ScoreboardState());
+                            break;
+                        case ButtonAction::Tutorial:
+                            game->pushState(new TutorialState());
                             break;
                         default:
                             break;

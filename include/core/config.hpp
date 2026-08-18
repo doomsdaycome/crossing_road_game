@@ -116,6 +116,12 @@ namespace Config {
     inline const std::string BTN_START_TEXTURE   = "asset/images/ui/btn_start.png";
     inline const std::string DOOR_LEFT_TEXTURE  = "asset/images/ui/door_left.png";
     inline const std::string DOOR_RIGHT_TEXTURE = "asset/images/ui/door_right.png";
+    
+    inline const std::string SCROLL_TOP_TEXTURE = "asset/images/ui/scroll_top.png";
+    inline const std::string SCROLL_MID_TEXTURE = "asset/images/ui/scroll_mid.png";
+    inline const std::string SCROLL_BOT_TEXTURE = "asset/images/ui/scroll_bot.png";
+    inline const std::string GUIDE_TEXTURE      = "asset/images/ui/guide.png";
+    inline const std::string ND_FONT            = "asset/fonts/nd.ttf";
 
     // --- Thực thể & Môi trường ---
     inline const std::string PLAYER_TEXTURE      = "asset/images/entities/player/pl0.png"; // Hiệp sĩ
