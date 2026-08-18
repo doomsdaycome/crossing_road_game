@@ -20,14 +20,24 @@ Lane::Lane(LaneType type, float yPosition, int direction, float speedMultiplier,
     } 
     else {
         if (type_ == LaneType::ROAD) setupWalkAssets();
-        else setupFlyAssets();
+        else if (type_ == LaneType::GRASS) setupFlyAssets();
+        else if (type_ == LaneType::CHASM) setupChasmAssets();
 
-        // Chọn kịch bản sinh quái ngẫu nhiên
-        const auto& patterns = Config::SPAWN_PATTERNS;
-        if (!patterns.empty()) {
-            spawnPattern_ = patterns[static_cast<size_t>(rand()) % patterns.size()];
+        // Chọn kịch bản sinh ngẫu nhiên tùy theo loại làn
+        if (type_ == LaneType::CHASM) {
+            const auto& patterns = Config::CARPET_SPAWN_PATTERNS;
+            if (!patterns.empty()) {
+                spawnPattern_ = patterns[static_cast<size_t>(rand()) % patterns.size()];
+            } else {
+                spawnPattern_ = {1.f};
+            }
         } else {
-            spawnPattern_ = {1.f};
+            const auto& patterns = Config::SPAWN_PATTERNS;
+            if (!patterns.empty()) {
+                spawnPattern_ = patterns[static_cast<size_t>(rand()) % patterns.size()];
+            } else {
+                spawnPattern_ = {1.f};
+            }
         }
 
         // Tính độ trễ sinh quái đầu tiên (Stagger Delay) để tránh quái kẹt thành hàng dọc
@@ -71,7 +81,8 @@ Lane::Lane(const LaneSaveData& saveData)
     // --- Khôi phục tài nguyên ---
     if (type_ == LaneType::REST) setupRestAssets();
     else if (type_ == LaneType::ROAD) setupWalkAssets();
-    else setupFlyAssets();
+    else if (type_ == LaneType::GRASS) setupFlyAssets();
+    else if (type_ == LaneType::CHASM) setupChasmAssets();
 
     if (bgSprite_) {
         bgSprite_->setPosition({0.f, yPosition_});
@@ -84,6 +95,12 @@ Lane::Lane(const LaneSaveData& saveData)
     if (monsterTexture_ != nullptr) {
         for (float posX : saveData.monsterPositionsX) {
             monsters_.emplace_back(*monsterTexture_, posX, yPosition_ + Config::TILE_SIZE / 2.f, finalSpeed, direction_, monsterFrameCount_);
+        }
+    }
+
+    if (carpetTexture_ != nullptr) {
+        for (float posX : saveData.carpetPositionsX) {
+            carpets_.emplace_back(*carpetTexture_, posX, yPosition_ + Config::TILE_SIZE / 2.f, finalSpeed, direction_);
         }
     }
 }
@@ -121,6 +138,17 @@ void Lane::setupRestAssets() {
     baseSpeed_ = 0.f;
     monsterFrameCount_ = 1;
     monsterTexture_ = nullptr;
+    carpetTexture_ = nullptr;
+}
+
+void Lane::setupChasmAssets() {
+    const sf::Texture& bgTex = ResourceManager::instance().getTexture(Config::CHASM_LANE_TEXTURE);
+    carpetTexture_ = &ResourceManager::instance().getTexture(Config::CARPET_TEXTURE);
+    
+    bgSprite_ = std::make_unique<sf::Sprite>(bgTex);
+    baseSpeed_ = Config::CARPET_BASE_SPEED;
+    monsterFrameCount_ = Config::CARPET_FRAME_COUNT;
+    monsterTexture_ = nullptr;
 }
 
 // ==========================================
@@ -139,6 +167,9 @@ LaneSaveData Lane::exportSaveData() const {
 
     for (const auto& monster : monsters_) {
         data.monsterPositionsX.push_back(monster.getPositionX());
+    }
+    for (const auto& carpet : carpets_) {
+        data.carpetPositionsX.push_back(carpet.getPositionX());
     }
     return data;
 }
@@ -169,10 +200,18 @@ void Lane::update(float deltaTime, bool isRedLight) {
                 monsters_.emplace_back(*monsterTexture_, spawnX, yPosition_ + Config::TILE_SIZE / 2.f, finalSpeed, direction_, monsterFrameCount_);
             }
 
-            // Ép ngưỡng delay tối thiểu để quái không bị đẻ ra chồng chéo khi tốc độ quá cao
+            if (canSpawn && carpetTexture_ != nullptr) {
+                float finalSpeed = baseSpeed_ * speedMultiplier_;
+                carpets_.emplace_back(*carpetTexture_, spawnX, yPosition_ + Config::TILE_SIZE / 2.f, finalSpeed, direction_);
+            }
+
+            // Ép ngưỡng delay tối thiểu để quái/thảm không bị đẻ ra chồng chéo khi tốc độ quá cao
             float nextDelay = spawnPattern_[static_cast<size_t>(patternIndex_)];
             float delayReduction = 1.0f + (speedMultiplier_ - 1.0f) * 0.25f; 
-            float actualDelay = std::max(0.5f, nextDelay / delayReduction);
+            
+            // Do thảm dài gấp 3 lần, nên cần thời gian tối thiểu cao hơn để không bị đè
+            float minDelay = (type_ == LaneType::CHASM) ? 1.5f : 0.4f;
+            float actualDelay = std::max(nextDelay / delayReduction, minDelay);
 
             // Bắt buộc reset timer và chuyển pattern kế tiếp ngay cả khi bị block (canSpawn == false)
             // Nếu không reset, spawnTimer_ sẽ mãi mãi <= 0 và quái bị đẻ chồng chất vào frame tiếp theo
@@ -184,11 +223,18 @@ void Lane::update(float deltaTime, bool isRedLight) {
     for (auto& monster : monsters_) {
         monster.update(deltaTime, isRedLight);
     }
+    for (auto& carpet : carpets_) {
+        carpet.update(deltaTime, isRedLight);
+    }
 
     // Dọn dẹp quái vật ra khỏi màn hình
     monsters_.erase(
         std::remove_if(monsters_.begin(), monsters_.end(), [](const Monster& m) { return m.isOffScreen(); }),
         monsters_.end()
+    );
+    carpets_.erase(
+        std::remove_if(carpets_.begin(), carpets_.end(), [](const Carpet& c) { return c.isOffScreen(); }),
+        carpets_.end()
     );
 }
 
@@ -222,6 +268,9 @@ void Lane::render(sf::RenderWindow& window) {
     for (auto& monster : monsters_) {
         monster.render(window);
     }
+    for (auto& carpet : carpets_) {
+        carpet.render(window);
+    }
 }
 
 int Lane::collectItemAt(float playerX) {
@@ -245,3 +294,4 @@ int Lane::collectItemAt(float playerX) {
 float Lane::getYPosition() const { return yPosition_; }
 LaneType Lane::getType() const { return type_; }
 const std::vector<Monster>& Lane::getMonsters() const { return monsters_; }
+const std::vector<Carpet>& Lane::getCarpets() const { return carpets_; }

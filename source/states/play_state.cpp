@@ -144,7 +144,9 @@ void PlayingState::processEvents(Game* game, const std::optional<sf::Event>& eve
             if (!isGameStarted_) isGameStarted_ = true;
         }
     }
-    m_player_.processEvents(event);
+    m_player_.processEvents(event, [this](float targetY) {
+        return m_laneManager_.isChasmLane(targetY);
+    });
 }
 
 // ==========================================

@@ -1,8 +1,8 @@
 #include "gameplay/collision_system.hpp"
 #include "entities/player.hpp"
 #include "gameplay/lane_manager.hpp"
-#include "entities/lane.hpp"
 #include "entities/monster.hpp"
+#include "entities/carpet.hpp"
 #include <SFML/Graphics.hpp>
 
 sf::FloatRect scaleRect(const sf::FloatRect& rect, float scaleX, float scaleY) {
@@ -20,15 +20,49 @@ sf::FloatRect scaleRect(const sf::FloatRect& rect, float scaleX, float scaleY) {
     return scaled;
 }
 
-bool CollisionSystem::checkPlayerVsMonsters(const Player& player, const LaneManager& laneManager) {
+// Sửa tham số thành Player& để có thể gọi setRiding()
+bool CollisionSystem::checkPlayerVsMonsters(Player& player, const LaneManager& laneManager) {
     sf::FloatRect rawPlayerBox = player.getGlobalBounds();
     
     // Bóp hitbox Player còn 60% bề ngang và 80% chiều cao
     sf::FloatRect playerBox = scaleRect(rawPlayerBox, 0.6f, 0.8f);
 
+    // Reset trạng thái riding mỗi frame, nếu tí nữa phát hiện đang chạm thảm thì mới set true
+    player.setRiding(false, 0.f);
+
     for (const auto& lane : laneManager.getLanes()) {
         if (lane->getType() == LaneType::REST) continue;
 
+        // Xử lý Làn vực thẳm (CHASM) - Inverted Collision
+        if (lane->getType() == LaneType::CHASM) {
+            // Kiểm tra xem người chơi có nằm trong làn này không
+            // Người chơi nằm trên Làn nếu tọa độ Y của người chơi nằm trong phạm vi của Làn
+            float laneTop = lane->getYPosition();
+            float laneBottom = laneTop + Config::LANE_HEIGHT;
+            float playerCenterY = rawPlayerBox.position.y + rawPlayerBox.size.y / 2.f;
+
+            if (playerCenterY >= laneTop && playerCenterY <= laneBottom) {
+                bool isTouchingCarpet = false;
+                for (const auto& carpet : lane->getCarpets()) {
+                    sf::FloatRect rawCarpetBox = carpet.getGlobalBounds();
+                    sf::FloatRect carpetBox = scaleRect(rawCarpetBox, 0.9f, 0.9f); // Bóp hitbox thảm một chút để dễ đứng
+                    
+                    if (playerBox.findIntersection(carpetBox).has_value()) {
+                        isTouchingCarpet = true;
+                        player.setRiding(true, carpet.getSpeed());
+                        break;
+                    }
+                }
+
+                // INVERTED COLLISION: Nếu ở trên làn vực mà KHÔNG chạm thảm nào -> CHẾT
+                if (!isTouchingCarpet) {
+                    return true;
+                }
+            }
+            continue; // Bỏ qua việc check quái thường cho làn này
+        }
+
+        // Xử lý Làn thường (ROAD, GRASS)
         for (const auto& monster : lane->getMonsters()) {
             sf::FloatRect rawMonsterBox = monster.getGlobalBounds();
             
@@ -36,7 +70,6 @@ bool CollisionSystem::checkPlayerVsMonsters(const Player& player, const LaneMana
             sf::FloatRect monsterBox = scaleRect(rawMonsterBox, 0.8f, 0.8f);
 
             // SFML 3.x: Dùng findIntersection thay cho intersects
-            // Nó trả về std::optional, nên ta dùng .has_value() để check xem có va chạm không
             if (playerBox.findIntersection(monsterBox).has_value()) {
                 return true; 
             }

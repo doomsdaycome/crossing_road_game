@@ -92,6 +92,13 @@ namespace Config {
         {0.2f, 0.2f, 0.2f, 4.5f}    // Nhịp 4: 4 con bám sát đít nhau, hở 4.5 giây
     };
 
+    // Các cụm thời gian giãn cách riêng cho Thảm bay (Vì thảm dài gấp 3 lần quái)
+    inline const std::vector<std::vector<float>> CARPET_SPAWN_PATTERNS = {
+        {2.0f, 4.0f},               // Nhịp 1: 2 thảm cách nhau 2s, hở 4s
+        {2.5f, 2.5f, 5.0f},         // Nhịp 2: 3 thảm cách đều 2.5s, hở 5s
+        {1.8f, 1.8f, 4.5f}          // Nhịp 3: Thảm hơi sát (1.8s), hở 4.5s
+    };
+
     // ==========================================
     // 8. ĐƯỜNG DẪN TÀI NGUYÊN (ASSET PATHS)
     // ==========================================
@@ -121,6 +128,11 @@ namespace Config {
     inline constexpr int MONSTER_FLY_COUNT = 2;  // Update this number if there are more flying monsters
     
     inline const std::string REST_LANE_TEXTURE   = "asset/images/world/ln2.png";    // Nền an toàn
+    
+    inline const std::string CHASM_LANE_TEXTURE  = "asset/images/world/ln2.png";    // Nền vực thẳm
+    inline const std::string CARPET_TEXTURE      = "asset/images/entities/carpet.png"; // Thảm bay
+    inline constexpr float CARPET_BASE_SPEED     = 120.f;
+    inline constexpr int CARPET_FRAME_COUNT      = 1;
 
     inline const std::string FINISH_LINE_TEXTURE = "asset/images/world/bg2.png";
 

@@ -12,7 +12,7 @@ class LaneManager;
 // ==========================================
 class CollisionSystem {
 public:
-    static bool checkPlayerVsMonsters(const Player& player, const LaneManager& laneManager);
+    static bool checkPlayerVsMonsters(Player& player, const LaneManager& laneManager);
     static int checkAndCollectCoins(const Player& player, LaneManager& laneManager);
 private:
     CollisionSystem() = delete;

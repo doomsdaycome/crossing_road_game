@@ -26,6 +26,7 @@ public:
     std::vector<LaneSaveData> exportSaveData() const;
 
     const std::vector<std::unique_ptr<Lane>>& getLanes() const;
+    bool isChasmLane(float laneY) const;
 
     float getGlobalSpeedMultiplier() const;
 

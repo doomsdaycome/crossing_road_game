@@ -4,13 +4,15 @@
 #include <memory>
 #include <vector>
 #include "entities/monster.hpp"
+#include "entities/carpet.hpp"
 
 // Loai lane. enum class de de mo rong (them WATER, RAIL...) sau nay
 // ma khong phai sua if/else rai rac khap noi (fix OCP violation trong audit).
 enum class LaneType {
     ROAD = 0,
     GRASS = 1,
-    REST = 2 // MOI: lane "nghi chan" - KHONG nha quai, dung o dau Endless mode
+    REST = 2, // MOI: lane "nghi chan" - KHONG nha quai, dung o dau Endless mode
+    CHASM = 3 // Lane Vực Thẳm, thả thảm bay
 };
 
 enum class ItemType { COIN_1 = 1, COIN_3 = 2, TREASURE = 3 };
@@ -32,6 +34,7 @@ struct LaneSaveData {
     float spawnTimer = 0.f;
 
     std::vector<float> monsterPositionsX;
+    std::vector<float> carpetPositionsX;
     std::vector<ItemData> items;
 };
 
@@ -62,12 +65,14 @@ public:
 
     // Can thiet cho CollisionSystem: cho phep "doc" danh sach quai ma khong sua duoc
     const std::vector<Monster>& getMonsters() const;
+    const std::vector<Carpet>& getCarpets() const;
     int collectItemAt(float playerX);
 
 private:
     void setupWalkAssets();
     void setupFlyAssets();
     void setupRestAssets();
+    void setupChasmAssets();
 
     LaneType type_ = LaneType::ROAD;
     float yPosition_ = 0.f;
@@ -83,7 +88,9 @@ private:
     std::unique_ptr<sf::Sprite> bgSprite_;
     // Con tro toi texture duoc cache boi ResourceManager - KHONG so huu, khong can giai phong
     const sf::Texture* monsterTexture_ = nullptr;
+    const sf::Texture* carpetTexture_ = nullptr;
 
     std::vector<Monster> monsters_;
+    std::vector<Carpet> carpets_;
     std::vector<ItemData> items_;
 };

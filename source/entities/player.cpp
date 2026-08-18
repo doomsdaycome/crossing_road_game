@@ -34,9 +34,24 @@ Player::Player() : m_speed_(Config::PLAYER_SPEED), m_isAlive_(true), m_isMoving_
     // Căn giữa tâm sprite dựa trên kích thước 1 frame
     m_sprite_->setOrigin({frameWidth / 2.f, frameHeight / 2.f});
     m_sprite_->setPosition(m_targetPos_);
+
+    m_groundPos_ = m_targetPos_;
+
+    // Khởi tạo cái bóng (Shadow)
+    // Dùng 1 vòng tròn dẹt màu đen mờ
+    // Do SFML không có hàm vẽ hình elip, có thể dùng CircleShape + scale Y
+    // Nhưng vì Shadow có thể phức tạp, ta tạo thẳng 1 texture mờ mờ hoặc đơn giản dùng sf::Sprite nếu có texture bóng.
+    // Nếu không có, ta không vẽ gì hoặc tạo 1 sf::CircleShape (cần include, nhưng prompt bảo dùng m_shadowSprite_).
+    // Tôi sẽ gán nó bằng texture hiện tại nhưng tô màu đen và ép bẹp lại
+    m_shadowSprite_ = std::make_unique<sf::Sprite>(texture);
+    m_shadowSprite_->setTextureRect(m_animator_.getTextureRect());
+    m_shadowSprite_->setColor(sf::Color(0, 0, 0, 100)); // Đen mờ
+    m_shadowSprite_->setOrigin({frameWidth / 2.f, frameHeight / 2.f});
+    m_shadowSprite_->setPosition(m_targetPos_);
+    m_shadowSprite_->setScale({scale, scale * 0.3f}); // Ép bẹp xuống thành bóng
 }
 
-void Player::processEvents(const std::optional<sf::Event>& event) {
+void Player::processEvents(const std::optional<sf::Event>& event, const std::function<bool(float)>& checkChasmFunc) {
     // 1. Kiểm tra trạng thái: Chết hoặc đang bay trên không thì bỏ qua toàn bộ phím bấm
     if (!m_isAlive_) return; 
     
@@ -45,6 +60,18 @@ void Player::processEvents(const std::optional<sf::Event>& event) {
 
     if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
         bool hasInput = false;
+
+        // GRID SNAPPING KHI ĐANG CƯỠI THẢM (CRUCIAL)
+        if (m_isRiding_ && !m_isMoving_) {
+            float currentLogicalX = m_groundPos_.x;
+            // Snap to grid using the requested formula
+            float targetX = std::round(currentLogicalX / Config::TILE_SIZE) * Config::TILE_SIZE;
+            
+            // Realign logical ground to the precise grid snapped target (to prevent drift during jump)
+            m_groundPos_.x = targetX + (Config::TILE_SIZE / 2.f); 
+            m_gridX_ = static_cast<int>(m_groundPos_.x / Config::TILE_SIZE);
+        }
+
         int nextGridX = m_gridX_;
         int nextGridY = m_gridY_;
 
@@ -86,6 +113,20 @@ void Player::processEvents(const std::optional<sf::Event>& event) {
             
             // Bật cờ khóa phím, bắt đầu hành trình lết tới đích
             m_isMoving_ = true;
+            m_jumpProgress_ = 0.f;
+            
+            // Tính toán khoảng cách tổng để vẽ Parabol (Sine wave)
+            float dx = m_targetPos_.x - m_groundPos_.x;
+            float dy = m_targetPos_.y - m_groundPos_.y;
+            m_jumpDist_ = std::sqrt(dx * dx + dy * dy);
+            m_jumpDuration_ = m_jumpDist_ / m_speed_;
+            
+            // QUYẾT ĐỊNH JUMP: Chỉ nhảy (2.5D) nếu đang ở CHASM (đi ra) hoặc target là CHASM (đi vào)
+            bool targetIsChasm = checkChasmFunc ? checkChasmFunc(nextGridY * Config::TILE_SIZE) : false;
+            m_isJumping_ = m_isRiding_ || targetIsChasm;
+
+            // Gỡ cờ cưỡi thảm ngay khi bắt đầu bật nhảy (để tránh bị trôi tiếp lúc đang trên không)
+            m_isRiding_ = false;
             
             // [Gợi ý] Ông có thể mở comment dòng này để có tiếng lết/nhảy
             // ResourceManager::instance().playSound("sfx_jump");
@@ -96,19 +137,31 @@ void Player::processEvents(const std::optional<sf::Event>& event) {
 void Player::update(float dt) {
     if (m_isMoving_) {
         m_animator_.update(dt);
+        m_shadowSprite_->setTextureRect(m_animator_.getTextureRect());
     } else {
         m_animator_.resetToIdle();
+        m_shadowSprite_->setTextureRect(m_animator_.getTextureRect());
     }
     m_sprite_->setTextureRect(m_animator_.getTextureRect());
 
     // Nếu đang đứng yên thì khỏi tính toán mất công
-    if (!m_isMoving_) return; 
+    if (!m_isMoving_) {
+        // Cập nhật vị trí trôi nếu đang đứng trên thảm bay
+        if (m_isRiding_) {
+            m_groundPos_.x += m_rideSpeed_ * dt;
+            m_sprite_->setPosition(m_groundPos_);
+            m_shadowSprite_->setPosition(m_groundPos_);
+            
+            // Cập nhật gridX liên tục theo tọa độ trôi để khóa camera/màn hình mượt mà
+            m_gridX_ = static_cast<int>(m_groundPos_.x / Config::TILE_SIZE);
+            m_targetPos_ = m_groundPos_;
+        }
+        return; 
+    }
 
-    sf::Vector2f currentPos = m_sprite_->getPosition();
-
-    // Tính vector hướng và khoảng cách
-    float dx = m_targetPos_.x - currentPos.x;
-    float dy = m_targetPos_.y - currentPos.y;
+    // Tính vector hướng và khoảng cách theo tọa độ GỐC (mặt đất)
+    float dx = m_targetPos_.x - m_groundPos_.x;
+    float dy = m_targetPos_.y - m_groundPos_.y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
     // Quãng đường đi được trong frame này (đã được làm chậm nếu mắt mở)
@@ -116,19 +169,55 @@ void Player::update(float dt) {
 
     if (distance <= moveStep) {
         // ĐÃ TỚI ĐÍCH: Snap cho khớp ô và mở khóa phím
-        m_sprite_->setPosition(m_targetPos_);
+        m_groundPos_ = m_targetPos_;
+        m_sprite_->setPosition(m_groundPos_);
+        m_shadowSprite_->setPosition(m_groundPos_);
+        m_shadowSprite_->setScale({m_sprite_->getScale().x, m_sprite_->getScale().x * 0.3f});
+        
         m_isMoving_ = false;
+        m_jumpProgress_ = 0.f;
     }
     else {
         // ĐANG TRÊN ĐƯỜNG: Đi tiếp theo tỷ lệ khoảng cách
         float moveX = (dx / distance) * moveStep;
         float moveY = (dy / distance) * moveStep;
-        m_sprite_->move({moveX, moveY});
+        m_groundPos_.x += moveX;
+        m_groundPos_.y += moveY;
+        
+        if (m_isJumping_) {
+            // Cập nhật Parabol (Sine Wave) cho bước nhảy 2.5D
+            m_jumpProgress_ += dt;
+            float ratio = std::clamp(m_jumpProgress_ / m_jumpDuration_, 0.f, 1.f);
+            
+            // Hình sin cung cấp độ cong hoàn hảo từ 0 -> 1 -> 0
+            float jumpArc = std::sin(ratio * 3.14159265f); 
+            float jumpHeight = 30.f; // Độ cao cực đại của cú nhảy (pixels)
+            
+            // Cập nhật vị trí Sprite: Y bị đẩy lên cao bởi jumpArc
+            sf::Vector2f visualPos = m_groundPos_;
+            visualPos.y -= jumpArc * jumpHeight;
+            m_sprite_->setPosition(visualPos);
+            
+            // Cập nhật Shadow: Đứng dưới mặt đất, nhưng bị thu nhỏ lại khi bay lên cao
+            m_shadowSprite_->setPosition(m_groundPos_);
+            float scale = m_sprite_->getScale().x;
+            float shadowShrink = 1.0f - (jumpArc * 0.4f); // Bóng nhỏ lại tối đa 40%
+            m_shadowSprite_->setScale({scale * shadowShrink, scale * 0.3f * shadowShrink});
+        } else {
+            // Đi bộ bình thường, không nảy, bóng nguyên kích thước
+            m_sprite_->setPosition(m_groundPos_);
+            m_shadowSprite_->setPosition(m_groundPos_);
+        }
     }
 }
 
 void Player::render(sf::RenderWindow& window) {
     if (m_isAlive_) {
+        // Chi ve bong neu dang jump de nhat quan, hoac luon ve cung duoc. User bảo "or shadow effect",
+        // Tức là khi đi bộ thì KHÔNG có shadow.
+        if (m_isJumping_ && m_isMoving_) {
+            window.draw(*m_shadowSprite_);
+        }
         window.draw(*m_sprite_);
     }
 }
@@ -144,12 +233,22 @@ void Player::loadState(int gridX, int gridY) {
         m_gridX_ * m_tileSize_ + (m_tileSize_ / 2),
         m_gridY_ * m_tileSize_ + (m_tileSize_ / 2)
     };
-    m_sprite_->setPosition(m_targetPos_);
+    m_groundPos_ = m_targetPos_;
+    m_sprite_->setPosition(m_groundPos_);
+    m_shadowSprite_->setPosition(m_groundPos_);
     m_isMoving_ = false;
 }
 
 sf::FloatRect Player::getGlobalBounds() const {
-    return m_sprite_->getGlobalBounds();
+    sf::FloatRect bounds = m_sprite_->getGlobalBounds();
+    
+    // Hitbox bất biến: Dìm hitbox xuống lại mặt đất (m_groundPos_) 
+    // thay vì bay lên không trung cùng với ảnh Sprite.
+    float visualY = m_sprite_->getPosition().y;
+    float groundY = m_groundPos_.y;
+    bounds.position.y += (groundY - visualY);
+    
+    return bounds;
 }
 
 bool Player::isAlive() const {
@@ -168,4 +267,9 @@ void Player::die() {
 
 void Player::setOnDeath(std::function<void()> callback) {
     m_onDeath_ = std::move(callback);
+}
+
+void Player::setRiding(bool isRiding, float speed) {
+    m_isRiding_ = isRiding;
+    m_rideSpeed_ = speed;
 }

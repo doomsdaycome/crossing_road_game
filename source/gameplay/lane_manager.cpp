@@ -62,9 +62,12 @@ LaneType LaneManager::pickNextLaneType() {
         return LaneType::REST;
     }
 
-    // Con lai: 50/50 giua Road (co xe) va Grass (co doi/quai bay) nhu ban goc
+    // Con lai: chia deu cho Road, Grass, va Chasm
     consecutiveHazardCount_++;
-    return (rand() % 2 == 0) ? LaneType::ROAD : LaneType::GRASS;
+    int choice = rand() % 3;
+    if (choice == 0) return LaneType::ROAD;
+    if (choice == 1) return LaneType::GRASS;
+    return LaneType::CHASM;
 }
 
 void LaneManager::spawnOneEndlessLane(bool forceRest) {
@@ -143,6 +146,15 @@ std::vector<LaneSaveData> LaneManager::exportSaveData() const {
 
 const std::vector<std::unique_ptr<Lane>>& LaneManager::getLanes() const {
     return lanes_;
+}
+
+bool LaneManager::isChasmLane(float laneY) const {
+    for (const auto& lane : lanes_) {
+        if (std::abs(lane->getYPosition() - laneY) < 5.0f) {
+            return lane->getType() == LaneType::CHASM;
+        }
+    }
+    return false;
 }
 
 float LaneManager::getGlobalSpeedMultiplier() const {

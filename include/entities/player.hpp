@@ -9,11 +9,22 @@
 class Player {
 private:
     std::unique_ptr<sf::Sprite> m_sprite_;
+    std::unique_ptr<sf::Sprite> m_shadowSprite_;
     Animator m_animator_;
 
     float m_speed_;
     bool m_isAlive_;
     bool m_isMoving_;
+
+    bool m_isRiding_ = false;
+    float m_rideSpeed_ = 0.f;
+
+    // Jump animation variables
+    bool m_isJumping_ = false;
+    float m_jumpProgress_ = 0.f; 
+    float m_jumpDuration_ = 0.f;
+    sf::Vector2f m_groundPos_;
+    float m_jumpDist_ = 0.f;
 
     float m_tileSize_;
     int m_gridX_;
@@ -25,7 +36,7 @@ private:
 public:
     Player();
 
-    void processEvents(const std::optional<sf::Event>& event);
+    void processEvents(const std::optional<sf::Event>& event, const std::function<bool(float)>& checkChasmFunc = nullptr);
     void update(float dt);
     void render(sf::RenderWindow& window);
 
@@ -41,4 +52,6 @@ public:
     // MOI: cho phep PlayingState (hoac bat ky ai) lang nghe su kien Player chet
     // ma khong can Player phai biet ve GameOverState/Game - giu Player doc lap (DIP).
     void setOnDeath(std::function<void()> callback);
+
+    void setRiding(bool isRiding, float speed);
 };
