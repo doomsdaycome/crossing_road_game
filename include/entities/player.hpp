@@ -4,10 +4,12 @@
 #include <memory>
 #include <optional>
 #include <functional>
+#include "utils/animator.hpp"
 
 class Player {
 private:
     std::unique_ptr<sf::Sprite> m_sprite_;
+    Animator m_animator_;
 
     float m_speed_;
     bool m_isAlive_;

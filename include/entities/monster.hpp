@@ -2,23 +2,15 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include "utils/animator.hpp"
 
 class Monster {
 private:
-    void updateTextureRect();
-
     std::unique_ptr<sf::Sprite> m_sprite_;
+    Animator m_animator_;
 
     float m_speed_ = 0.f;
     int m_direction_ = 1;
-
-    // Animation
-    int m_frameCount_ = 1;
-    int m_currentFrame_ = 0;
-    float m_frameDuration_ = 0.15f;
-    float m_animationTimer_ = 0.f;
-    int m_frameWidth_ = 0;
-    int m_frameHeight_ = 0;
 
     sf::Vector2f m_logicalPos_;
     float m_joltTimer_ = 0.f;

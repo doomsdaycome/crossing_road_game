@@ -65,8 +65,8 @@ public:
     int collectItemAt(float playerX);
 
 private:
-    void setupZombieAssets();
-    void setupBatAssets();
+    void setupWalkAssets();
+    void setupFlyAssets();
     void setupRestAssets();
 
     LaneType type_ = LaneType::ROAD;

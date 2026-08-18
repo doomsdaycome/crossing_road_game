@@ -1,43 +1,34 @@
 #include "entities/monster.hpp"
+#include "core/config.hpp"
 #include <cmath>
 
-Monster::Monster(const sf::Texture& texture, float startX, float startY, float speed, int direction, int frameCount) {
+Monster::Monster(const sf::Texture& texture, float startX, float startY, float speed, int direction, int frameCount) 
+    : m_animator_(texture.getSize().x / frameCount, texture.getSize().y / 2, frameCount, 0.15f) {
     m_sprite_ = std::make_unique<sf::Sprite>(texture);
 
     m_speed_ = speed * direction;
     m_direction_ = direction;
 
-    // 1. SETUP ANIMATION
-    m_frameCount_ = frameCount;
-    m_currentFrame_ = 0;
-    m_frameDuration_ = 0.15f;
-    m_animationTimer_ = 0.f;
+    int frameWidth = texture.getSize().x / frameCount;
+    int frameHeight = texture.getSize().y / 2; // Sprite sheet is 2 rows
 
-    // Chieu rong 1 frame = Tong chieu rong anh / so luong frame
-    m_frameWidth_ = static_cast<int>(texture.getSize().x) / m_frameCount_;
-    m_frameHeight_ = static_cast<int>(texture.getSize().y);
+    // Map direction to the correct row (e.g., 0 for Left/Backward, 1 for Right/Forward)
+    int row = (direction == 1) ? 1 : 0;
+    m_animator_.setDirection(row);
 
-    // 2. CAT FRAME DAU TIEN
-    updateTextureRect();
+    m_sprite_->setTextureRect(m_animator_.getTextureRect());
+    
+    // Thu nhỏ quái vật để vừa với 1 ô lưới
+    float scale = Config::TILE_SIZE / static_cast<float>(frameWidth);
+    m_sprite_->setScale({scale, scale});
 
     // 3. DAT TAM VA TOA DO
-    m_sprite_->setOrigin({m_frameWidth_ / 2.f, m_frameHeight_ / 2.f});
+    m_sprite_->setOrigin({frameWidth / 2.f, frameHeight / 2.f});
 
-    m_logicalPos_ = {startX, startY + (m_frameHeight_ / 2.f)};
+    // startY đã được truyền từ Lane là yPosition_ + TILE_SIZE / 2.f (tức là đã ở chính giữa)
+    m_logicalPos_ = {startX, startY};
     m_sprite_->setPosition(m_logicalPos_);
     m_joltTimer_ = 0.f;
-}
-
-void Monster::updateTextureRect() {
-    int leftOffset = m_currentFrame_ * m_frameWidth_;
-
-    if (m_direction_ == 1) {
-        m_sprite_->setTextureRect(sf::IntRect({leftOffset + m_frameWidth_, 0}, {-m_frameWidth_, m_frameHeight_}));
-    }
-    else {
-        // Lat nguoc bang cach dao chieu width
-        m_sprite_->setTextureRect(sf::IntRect({leftOffset, 0}, {m_frameWidth_, m_frameHeight_}));
-    }
 }
 
 void Monster::update(float deltaTime, bool isRedLight) {
@@ -53,14 +44,8 @@ void Monster::update(float deltaTime, bool isRedLight) {
         m_sprite_->setPosition(m_logicalPos_);
         m_joltTimer_ = 0.f;
 
-        if (m_frameCount_ > 1) {
-            m_animationTimer_ += deltaTime;
-            if (m_animationTimer_ >= m_frameDuration_) {
-                m_animationTimer_ -= m_frameDuration_;
-                m_currentFrame_ = (m_currentFrame_ + 1) % m_frameCount_;
-                updateTextureRect();
-            }
-        }
+        m_animator_.update(deltaTime);
+        m_sprite_->setTextureRect(m_animator_.getTextureRect());
     }
 }
 

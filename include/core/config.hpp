@@ -28,7 +28,7 @@ namespace Config {
     // ==========================================
     // 3. THÔNG SỐ NHÂN VẬT (PLAYER)
     // ==========================================
-    inline constexpr float PLAYER_SPEED        = 600.f; // Tốc độ lướt của nhân vật (pixel/giây). Càng cao, nhân vật nhảy càng dứt khoát
+    inline constexpr float PLAYER_SPEED        = 300.f; // Tốc độ lướt của nhân vật (pixel/giây). Càng cao, nhân vật nhảy càng dứt khoát
     inline constexpr int   PLAYER_START_GRID_X = 5;     // Ô xuất phát theo trục X (Cột số 5)
     inline constexpr int   PLAYER_START_GRID_Y = 10;    // Ô xuất phát theo trục Y (Hàng số 10)
     
@@ -110,13 +110,15 @@ namespace Config {
     inline const std::string DOOR_RIGHT_TEXTURE = "asset/images/ui/door_right.png";
 
     // --- Thực thể & Môi trường ---
-    inline const std::string PLAYER_TEXTURE      = "asset/images/entities/pl0.png"; // Hiệp sĩ
+    inline const std::string PLAYER_TEXTURE      = "asset/images/entities/pl_ani.png"; // Hiệp sĩ
     
     inline const std::string ZOMBIE_LANE_TEXTURE = "asset/images/world/ln0.png";    // Nền đá (Cho Zombie)
-    inline const std::string ZOMBIE_TEXTURE      = "asset/images/entities/mt1.png"; // Quái Zombie
+    inline const std::string MONSTER_WALK_DIR = "asset/images/entities/mt_walk/";
+    inline constexpr int MONSTER_WALK_COUNT = 3; // Update this number if there are more walking monsters
     
     inline const std::string BAT_LANE_TEXTURE    = "asset/images/world/ln1.png";    // Nền vực/hang (Cho Dơi)
-    inline const std::string BAT_TEXTURE         = "asset/images/entities/mt2.png"; // Quái Dơi
+    inline const std::string MONSTER_FLY_DIR = "asset/images/entities/mt_fly/";
+    inline constexpr int MONSTER_FLY_COUNT = 2;  // Update this number if there are more flying monsters
     
     inline const std::string REST_LANE_TEXTURE   = "asset/images/world/ln2.png";    // Nền an toàn
 

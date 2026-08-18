@@ -17,11 +17,22 @@ Player::Player() : m_speed_(Config::PLAYER_SPEED), m_isAlive_(true), m_isMoving_
         m_gridY_ * m_tileSize_ + (m_tileSize_ / 2)
     };
 
-    // Lấy texture đã cache từ ResourceManager
-    const sf::Texture& texture = ResourceManager::instance().getTexture(Config::PLAYER_TEXTURE);
+    // Lấy texture đã cache từ ResourceManager với mask trong suốt (Magenta)
+    const sf::Texture& texture = ResourceManager::instance().getTextureWithMask(Config::PLAYER_TEXTURE, sf::Color::Magenta);
 
     m_sprite_ = std::make_unique<sf::Sprite>(texture);
-    centerOrigin(*m_sprite_);
+
+    int frameWidth = texture.getSize().x / 4;
+    int frameHeight = texture.getSize().y / 4;
+    m_animator_ = Animator(frameWidth, frameHeight, 4, 0.15f);
+    m_sprite_->setTextureRect(m_animator_.getTextureRect());
+
+    // Scale the sprite so the frame width shrinks down to fit TILE_SIZE exactly
+    float scale = Config::TILE_SIZE / static_cast<float>(frameWidth);
+    m_sprite_->setScale({scale, scale});
+
+    // Căn giữa tâm sprite dựa trên kích thước 1 frame
+    m_sprite_->setOrigin({frameWidth / 2.f, frameHeight / 2.f});
     m_sprite_->setPosition(m_targetPos_);
 }
 
@@ -40,18 +51,22 @@ void Player::processEvents(const std::optional<sf::Event>& event) {
         // 2. Bắt hướng di chuyển
         if (keyPress->code == sf::Keyboard::Key::W || keyPress->code == sf::Keyboard::Key::Up) {
             nextGridY -= 1;
+            m_animator_.setDirection(3); // Up
             hasInput = true;
         }
         else if (keyPress->code == sf::Keyboard::Key::S || keyPress->code == sf::Keyboard::Key::Down) {
             nextGridY += 1;
+            m_animator_.setDirection(0); // Down
             hasInput = true;
         }
         else if (keyPress->code == sf::Keyboard::Key::A || keyPress->code == sf::Keyboard::Key::Left) {
             nextGridX -= 1;
+            m_animator_.setDirection(1); // Left
             hasInput = true;
         }
         else if (keyPress->code == sf::Keyboard::Key::D || keyPress->code == sf::Keyboard::Key::Right) {
             nextGridX += 1;
+            m_animator_.setDirection(2); // Right
             hasInput = true;
         }
 
@@ -79,6 +94,13 @@ void Player::processEvents(const std::optional<sf::Event>& event) {
 }
 
 void Player::update(float dt) {
+    if (m_isMoving_) {
+        m_animator_.update(dt);
+    } else {
+        m_animator_.resetToIdle();
+    }
+    m_sprite_->setTextureRect(m_animator_.getTextureRect());
+
     // Nếu đang đứng yên thì khỏi tính toán mất công
     if (!m_isMoving_) return; 
 

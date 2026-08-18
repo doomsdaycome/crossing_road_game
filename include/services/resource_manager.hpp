@@ -35,6 +35,31 @@ public:
         return insertedIt->second;
     }
 
+    const sf::Texture& getTextureWithMask(const std::string& filepath, sf::Color maskColor) {
+        // Tạo khóa cache riêng biệt để tránh nhầm lẫn với bản không mask
+        std::string cacheKey = filepath + "_masked_" + std::to_string(maskColor.toInteger());
+        auto it = textureCache_.find(cacheKey);
+        if (it != textureCache_.end()) {
+            return it->second;
+        }
+
+        sf::Image image;
+        if (!image.loadFromFile(filepath)) {
+            std::cerr << "Loi: Khong the load image for masking: " << filepath << "\n";
+        } else {
+            image.createMaskFromColor(maskColor);
+        }
+
+        sf::Texture texture;
+        if (!texture.loadFromImage(image)) {
+            std::cerr << "Loi: Khong the tao texture tu image: " << filepath << "\n";
+        }
+
+        auto [insertedIt, success] = textureCache_.emplace(cacheKey, std::move(texture));
+        (void)success;
+        return insertedIt->second;
+    }
+
     // ==========================================
     // 2. QUẢN LÝ FONT CHỮ
     // ==========================================

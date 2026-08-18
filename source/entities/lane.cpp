@@ -4,6 +4,7 @@
 #include "utils/utils.hpp"
 #include <algorithm>
 #include <cstdlib>
+#include <string>
 
 // ==========================================
 // 1. CONSTRUCTOR: NEW GAME
@@ -18,8 +19,8 @@ Lane::Lane(LaneType type, float yPosition, int direction, float speedMultiplier,
         spawnPattern_.clear();
     } 
     else {
-        if (type_ == LaneType::ROAD) setupZombieAssets();
-        else setupBatAssets();
+        if (type_ == LaneType::ROAD) setupWalkAssets();
+        else setupFlyAssets();
 
         // Chọn kịch bản sinh quái ngẫu nhiên
         const auto& patterns = Config::SPAWN_PATTERNS;
@@ -69,8 +70,8 @@ Lane::Lane(const LaneSaveData& saveData)
 {
     // --- Khôi phục tài nguyên ---
     if (type_ == LaneType::REST) setupRestAssets();
-    else if (type_ == LaneType::ROAD) setupZombieAssets();
-    else setupBatAssets();
+    else if (type_ == LaneType::ROAD) setupWalkAssets();
+    else setupFlyAssets();
 
     if (bgSprite_) {
         bgSprite_->setPosition({0.f, yPosition_});
@@ -82,7 +83,7 @@ Lane::Lane(const LaneSaveData& saveData)
     // ĐÃ SỬA LỖI CRASH (Ngăn lỗi Null Pointer khi Load quái ở Làn nghỉ chân)
     if (monsterTexture_ != nullptr) {
         for (float posX : saveData.monsterPositionsX) {
-            monsters_.emplace_back(*monsterTexture_, posX, yPosition_, finalSpeed, direction_, monsterFrameCount_);
+            monsters_.emplace_back(*monsterTexture_, posX, yPosition_ + Config::TILE_SIZE / 2.f, finalSpeed, direction_, monsterFrameCount_);
         }
     }
 }
@@ -90,20 +91,28 @@ Lane::Lane(const LaneSaveData& saveData)
 // ==========================================
 // 3. CÁC HÀM SETUP TÀI NGUYÊN (ASSETS)
 // ==========================================
-void Lane::setupZombieAssets() {
+void Lane::setupWalkAssets() {
     const sf::Texture& bgTex = ResourceManager::instance().getTexture(Config::ZOMBIE_LANE_TEXTURE);
-    monsterTexture_ = &ResourceManager::instance().getTexture(Config::ZOMBIE_TEXTURE);
+    
+    int randIdx = std::rand() % Config::MONSTER_WALK_COUNT;
+    std::string path = Config::MONSTER_WALK_DIR + "mt" + std::to_string(randIdx) + ".png";
+    monsterTexture_ = &ResourceManager::instance().getTextureWithMask(path, sf::Color::Magenta);
+    
     bgSprite_ = std::make_unique<sf::Sprite>(bgTex);
     baseSpeed_ = Config::ZOMBIE_BASE_SPEED;
-    monsterFrameCount_ = Config::ZOMBIE_FRAME_COUNT;
+    monsterFrameCount_ = 4;
 }
 
-void Lane::setupBatAssets() {
+void Lane::setupFlyAssets() {
     const sf::Texture& bgTex = ResourceManager::instance().getTexture(Config::BAT_LANE_TEXTURE);
-    monsterTexture_ = &ResourceManager::instance().getTexture(Config::BAT_TEXTURE);
+    
+    int randIdx = std::rand() % Config::MONSTER_FLY_COUNT;
+    std::string path = Config::MONSTER_FLY_DIR + "mt" + std::to_string(randIdx) + ".png";
+    monsterTexture_ = &ResourceManager::instance().getTextureWithMask(path, sf::Color::Magenta);
+    
     bgSprite_ = std::make_unique<sf::Sprite>(bgTex);
     baseSpeed_ = Config::BAT_BASE_SPEED;
-    monsterFrameCount_ = Config::BAT_FRAME_COUNT;
+    monsterFrameCount_ = 4;
 }
 
 void Lane::setupRestAssets() {
@@ -157,16 +166,18 @@ void Lane::update(float deltaTime, bool isRedLight) {
 
             if (canSpawn && monsterTexture_ != nullptr) {
                 float finalSpeed = baseSpeed_ * speedMultiplier_;
-                monsters_.emplace_back(*monsterTexture_, spawnX, yPosition_, finalSpeed, direction_, monsterFrameCount_);
-
-                // Ép ngưỡng delay tối thiểu để quái không bị đẻ ra chồng chéo khi tốc độ quá cao
-                float nextDelay = spawnPattern_[static_cast<size_t>(patternIndex_)];
-                float delayReduction = 1.0f + (speedMultiplier_ - 1.0f) * 0.25f; 
-                float actualDelay = std::max(0.5f, nextDelay / delayReduction);
-
-                spawnTimer_ = actualDelay;
-                patternIndex_ = (patternIndex_ + 1) % static_cast<int>(spawnPattern_.size());
+                monsters_.emplace_back(*monsterTexture_, spawnX, yPosition_ + Config::TILE_SIZE / 2.f, finalSpeed, direction_, monsterFrameCount_);
             }
+
+            // Ép ngưỡng delay tối thiểu để quái không bị đẻ ra chồng chéo khi tốc độ quá cao
+            float nextDelay = spawnPattern_[static_cast<size_t>(patternIndex_)];
+            float delayReduction = 1.0f + (speedMultiplier_ - 1.0f) * 0.25f; 
+            float actualDelay = std::max(0.5f, nextDelay / delayReduction);
+
+            // Bắt buộc reset timer và chuyển pattern kế tiếp ngay cả khi bị block (canSpawn == false)
+            // Nếu không reset, spawnTimer_ sẽ mãi mãi <= 0 và quái bị đẻ chồng chất vào frame tiếp theo
+            spawnTimer_ = actualDelay;
+            patternIndex_ = (patternIndex_ + 1) % static_cast<int>(spawnPattern_.size());
         }
     }
 
