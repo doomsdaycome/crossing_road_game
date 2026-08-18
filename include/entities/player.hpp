@@ -43,6 +43,7 @@ public:
     int getGridX() const;
     int getGridY() const;
     void loadState(int gridX, int gridY);
+    void setSkin(int skinId);
 
     // MOI: can thiet de CollisionSystem kiem tra va cham
     sf::FloatRect getGlobalBounds() const;

@@ -246,6 +246,10 @@ void Lane::render(sf::RenderWindow& window) {
         window.draw(*bgSprite_);
     }
 
+    for (auto& carpet : carpets_) {
+        carpet.render(window);
+    }
+
     // TỐI ƯU HÓA RENDER VẬT PHẨM BẰNG STACK ALLOCATION
     if (!items_.empty()) {
         auto& rm = ResourceManager::instance();
@@ -267,9 +271,6 @@ void Lane::render(sf::RenderWindow& window) {
 
     for (auto& monster : monsters_) {
         monster.render(window);
-    }
-    for (auto& carpet : carpets_) {
-        carpet.render(window);
     }
 }
 

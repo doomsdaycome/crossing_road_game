@@ -63,6 +63,7 @@ PlayingState::PlayingState(GameMode gameMode, int level) {
     
     // Nạp Kỷ lục & Lưu mốc Y ban đầu cho cả 2 mode
     m_score_.loadHighScore();
+    m_player_.setSkin(m_score_.getEquippedSkin());
     m_minGridY_ = m_player_.getGridY();
 
     ResourceManager::instance().playMusic(Config::BGM_PLAYING);
@@ -104,6 +105,7 @@ PlayingState::PlayingState(const GameSnapshot& snapshot) {
     m_coinsCollectedInRun_ = snapshot.coinsInRun;
 
     m_score_.loadHighScore();
+    m_player_.setSkin(m_score_.getEquippedSkin());
     m_minGridY_ = m_player_.getGridY();
 
     ResourceManager::instance().playMusic(Config::BGM_PLAYING);

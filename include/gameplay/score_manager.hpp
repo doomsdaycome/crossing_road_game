@@ -23,30 +23,58 @@ public:
 
     int getTotalCoins() const { return totalCoins_; }
     void addTotalCoins(int coins) { totalCoins_ += coins; }
+    
+    bool spendCoins(int price) {
+        if (totalCoins_ >= price) {
+            totalCoins_ -= price;
+            saveHighScore(); // Mua xong tự động lưu ngay lập tức
+            return true;
+        }
+        return false; // Không đủ tiền
+    }
 
-    // ĐỌC CẢ ĐIỂM VÀ VÀNG
+    // ĐỌC CẢ ĐIỂM, VÀNG, SKIN
     void loadHighScore() {
         std::ifstream file("data/highscore.txt");
         if (file.is_open()) {
-            file >> bestScore_ >> totalCoins_; // Đọc 2 biến cách nhau bởi dấu space hoặc xuống dòng
+            file >> bestScore_ >> totalCoins_;
+            if (!(file >> equippedSkin_ >> unlockedSkins_)) {
+                equippedSkin_ = 0;
+                unlockedSkins_ = 1; // Bitmask: skin 0 is unlocked
+            }
             file.close();
         } else {
             bestScore_ = 0; 
-            totalCoins_ = 0; // Chưa chơi thì vàng = 0
+            totalCoins_ = 0;
+            equippedSkin_ = 0;
+            unlockedSkins_ = 1;
         }
     }
 
-    // GHI CẢ ĐIỂM VÀ VÀNG
+    // GHI CẢ ĐIỂM, VÀNG, SKIN
     void saveHighScore() const {
         std::ofstream file("data/highscore.txt");
         if (file.is_open()) {
-            file << bestScore_ << " " << totalCoins_; // Lưu 2 số cách nhau 1 khoảng trắng
+            file << bestScore_ << " " << totalCoins_ << " " << equippedSkin_ << " " << unlockedSkins_;
             file.close();
         }
+    }
+
+    // --- QUẢN LÝ SKIN ---
+    int getEquippedSkin() const { return equippedSkin_; }
+    void setEquippedSkin(int id) { equippedSkin_ = id; }
+    
+    bool isSkinUnlocked(int id) const {
+        return (unlockedSkins_ & (1 << id)) != 0;
+    }
+    void unlockSkin(int id) {
+        unlockedSkins_ |= (1 << id);
     }
 
 private:
     int score_ = 0;
     int bestScore_ = 0;
     int totalCoins_ = 0;
+    int equippedSkin_ = 0;
+    int unlockedSkins_ = 1; // 0b0001 (Skin 0 is always unlocked)
 };

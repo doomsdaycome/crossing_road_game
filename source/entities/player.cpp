@@ -273,3 +273,9 @@ void Player::setRiding(bool isRiding, float speed) {
     m_isRiding_ = isRiding;
     m_rideSpeed_ = speed;
 }
+
+void Player::setSkin(int skinId) {
+    std::string texPath = "asset/images/entities/player/pl" + std::to_string(skinId) + ".png";
+    const sf::Texture& texture = ResourceManager::instance().getTextureWithMask(texPath, sf::Color::Magenta);
+    m_sprite_->setTexture(texture);
+}

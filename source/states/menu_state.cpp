@@ -2,7 +2,8 @@
 #include "states/mode_state.hpp"
 #include "states/setting_state.hpp"
 #include "states/load_state.hpp"
-#include "states/scoreboard_state.hpp"   
+#include "states/scoreboard_state.hpp"  
+#include "states/shop_state.hpp"
 #include "services/resource_manager.hpp"
 #include "core/game.hpp"
 #include <iostream>
@@ -85,6 +86,9 @@ void MenuState::processEvents(Game* game, const std::optional<sf::Event>& event)
                         case ButtonAction::Continue:
                             game->pushState(new LoadState());
                             break;
+                        case ButtonAction::Shop:
+                            game->pushState(new ShopState());
+                            break;
                         case ButtonAction::Exit:
                             game->getWindow().close();
                             break;
@@ -93,6 +97,7 @@ void MenuState::processEvents(Game* game, const std::optional<sf::Event>& event)
                             break;
                         case ButtonAction::Scoreboard:
                             game->pushState(new ScoreboardState());
+                            break;
                         default:
                             break;
                     }

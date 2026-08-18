@@ -59,7 +59,7 @@ namespace Config {
     // ==========================================
     // 5. CƠ CHẾ CUỘN VÔ TẬN (ENDLESS MODE)
     // ==========================================
-    inline constexpr float CAMERA_BASE_SCROLL_SPEED   = 30.f;   // Tốc độ Camera tự động trượt lên trên (Ép người chơi phải đi tiếp)
+    inline constexpr float CAMERA_BASE_SCROLL_SPEED   = 20.f;   // Tốc độ Camera tự động trượt lên trên (Ép người chơi phải đi tiếp)
     inline constexpr int   ENDLESS_INITIAL_LANE_COUNT = 15;     // Số lượng làn đường được tạo sẵn ngay khi vừa vào game
     
     // Thuật toán cuốn chiếu (Procedural Generation)
@@ -110,6 +110,7 @@ namespace Config {
     // --- Giao diện (UI) ---
     inline const std::string MENU_BG_TEXTURE     = "asset/images/ui/bg.png";
     inline const std::string OPTION_BG_TEXTURE   = "asset/images/ui/bg_option.png";           
+    inline const std::string SHOP_BG_TEXTURE     = "asset/images/ui/bg_shop.png";           
     inline const std::string BTN_BLANK_TEXTURE   = "asset/images/ui/btn_blank.png";
     inline const std::string BTN_BLANK_SQUARE_TEXTURE = "asset/images/ui/btn_square.png";    
     inline const std::string BTN_START_TEXTURE   = "asset/images/ui/btn_start.png";
@@ -117,7 +118,7 @@ namespace Config {
     inline const std::string DOOR_RIGHT_TEXTURE = "asset/images/ui/door_right.png";
 
     // --- Thực thể & Môi trường ---
-    inline const std::string PLAYER_TEXTURE      = "asset/images/entities/pl_ani.png"; // Hiệp sĩ
+    inline const std::string PLAYER_TEXTURE      = "asset/images/entities/player/pl0.png"; // Hiệp sĩ
     
     inline const std::string ZOMBIE_LANE_TEXTURE = "asset/images/world/ln0.png";    // Nền đá (Cho Zombie)
     inline const std::string MONSTER_WALK_DIR = "asset/images/entities/mt_walk/";
@@ -144,12 +145,12 @@ namespace Config {
     inline const std::string BG_MUSIC            = "asset/audio/bg_music.ogg";
     inline const std::string BGM_PLAYING         = "asset/audio/pl_music.ogg";
 
-    inline const std::string EYE_FRAME_0 = "asset/images/entities/Sharinga/eye_frame_0.png";
-    inline const std::string EYE_FRAME_1 = "asset/images/entities/Sharinga/eye_frame_1.png";
-    inline const std::string EYE_FRAME_2 = "asset/images/entities/Sharinga/eye_frame_2.png";
-    inline const std::string EYE_FRAME_3 = "asset/images/entities/Sharinga/eye_frame_3.png";
-    inline const std::string EYE_FRAME_4 = "asset/images/entities/Sharinga/eye_frame_4.png";
-    inline const std::string EYE_FRAME_5 = "asset/images/entities/Sharinga/eye_frame_5.png";
+    inline const std::string EYE_FRAME_0 = "asset/images/entities/eye/Sharinga/eye_frame_0.png";
+    inline const std::string EYE_FRAME_1 = "asset/images/entities/eye/Sharinga/eye_frame_1.png";
+    inline const std::string EYE_FRAME_2 = "asset/images/entities/eye/Sharinga/eye_frame_2.png";
+    inline const std::string EYE_FRAME_3 = "asset/images/entities/eye/Sharinga/eye_frame_3.png";
+    inline const std::string EYE_FRAME_4 = "asset/images/entities/eye/Sharinga/eye_frame_4.png";
+    inline const std::string EYE_FRAME_5 = "asset/images/entities/eye/Sharinga/eye_frame_5.png";
 
     // ==========================================
     // 9. DỮ LIỆU I/O (TỆP TIN LƯU TRỮ)
