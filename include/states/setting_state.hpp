@@ -12,16 +12,12 @@ private:
     std::unique_ptr<sf::Text> m_musicValueText_;
     std::unique_ptr<sf::Text> m_sfxLabel_;
     std::unique_ptr<sf::Text> m_sfxValueText_;
-    std::unique_ptr<sf::Text> m_themeLabel_;
-    std::unique_ptr<sf::Text> m_themeValueText_;
+    std::unique_ptr<sf::Text> m_titleText_;
 
     bool m_isFromGameplay_;
     float m_lastMusicVol_ = 100.f;
     float m_lastSfxVol_ = 100.f;
     GameSnapshot m_currentSnapshot_;
-
-    int m_themeIndex_ = 0;
-    std::vector<std::string> m_themeOptions_ = {"CLASSIC", "PHARAOH", "DARK TOMB"};
 public:
     SettingState(bool isFromGameplay = false, GameSnapshot snapshot = GameSnapshot());
     

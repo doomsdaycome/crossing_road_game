@@ -49,6 +49,14 @@ Player::Player() : m_speed_(Config::PLAYER_SPEED), m_isAlive_(true), m_isMoving_
     m_shadowSprite_->setOrigin({frameWidth / 2.f, frameHeight / 2.f});
     m_shadowSprite_->setPosition(m_targetPos_);
     m_shadowSprite_->setScale({scale, scale * 0.3f}); // Ép bẹp xuống thành bóng
+
+    // Magnet circle effect
+    m_magnetCircle_.setRadius(Config::TILE_SIZE * 3.0f); // Bán kính vòng nam châm
+    m_magnetCircle_.setFillColor(sf::Color(255, 215, 0, 40)); // Vàng trong suốt mờ
+    m_magnetCircle_.setOutlineColor(sf::Color(255, 255, 0, 150)); // Viền vàng sáng
+    m_magnetCircle_.setOutlineThickness(2.f);
+    m_magnetCircle_.setOrigin({m_magnetCircle_.getRadius(), m_magnetCircle_.getRadius()});
+    m_magnetCircle_.setPosition(m_targetPos_);
 }
 
 void Player::processEvents(const std::optional<sf::Event>& event, const std::function<bool(float)>& checkChasmFunc) {
@@ -61,16 +69,7 @@ void Player::processEvents(const std::optional<sf::Event>& event, const std::fun
     if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
         bool hasInput = false;
 
-        // GRID SNAPPING KHI ĐANG CƯỠI THẢM (CRUCIAL)
-        if (m_isRiding_ && !m_isMoving_) {
-            float currentLogicalX = m_groundPos_.x;
-            // Snap to grid using the requested formula
-            float targetX = std::round(currentLogicalX / Config::TILE_SIZE) * Config::TILE_SIZE;
-            
-            // Realign logical ground to the precise grid snapped target (to prevent drift during jump)
-            m_groundPos_.x = targetX + (Config::TILE_SIZE / 2.f); 
-            m_gridX_ = static_cast<int>(m_groundPos_.x / Config::TILE_SIZE);
-        }
+        // XÓA GRID SNAPPING: Không ép teleport tọa độ trước khi nhảy để giữ chuyển động mượt mà
 
         int nextGridX = m_gridX_;
         int nextGridY = m_gridY_;
@@ -135,6 +134,26 @@ void Player::processEvents(const std::optional<sf::Event>& event, const std::fun
 }
 
 void Player::update(float dt) {
+    m_buffManager_.update(dt);
+    
+    // Apply Phantom Cloak visual effect
+    if (m_buffManager_.isInvisible()) {
+        m_sprite_->setColor(sf::Color(255, 255, 255, 128)); // Lower alpha
+    } else {
+        m_sprite_->setColor(sf::Color::White); // Normal
+    }
+
+    // Update Magnet Circle
+    if (m_buffManager_.isMagnetActive()) {
+        m_magnetCircle_.setPosition(m_groundPos_); // Đi theo người chơi
+        
+        // Hiệu ứng nhịp đập mờ mờ cho nam châm
+        static float magnetPulseTime = 0.f;
+        magnetPulseTime += dt;
+        float pulseScale = 1.0f + 0.05f * std::sin(magnetPulseTime * 5.f);
+        m_magnetCircle_.setScale({pulseScale, pulseScale});
+    }
+
     if (m_isMoving_) {
         m_animator_.update(dt);
         m_shadowSprite_->setTextureRect(m_animator_.getTextureRect());
@@ -213,6 +232,11 @@ void Player::update(float dt) {
 
 void Player::render(sf::RenderWindow& window) {
     if (m_isAlive_) {
+        // Vẽ vòng tròn nam châm nếu đang kích hoạt (Vẽ nằm dưới player)
+        if (m_buffManager_.isMagnetActive()) {
+            window.draw(m_magnetCircle_);
+        }
+
         // Chi ve bong neu dang jump de nhat quan, hoac luon ve cung duoc. User bảo "or shadow effect",
         // Tức là khi đi bộ thì KHÔNG có shadow.
         if (m_isJumping_ && m_isMoving_) {

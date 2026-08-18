@@ -27,6 +27,7 @@ public:
 
     const std::vector<std::unique_ptr<Lane>>& getLanes() const;
     bool isChasmLane(float laneY) const;
+    void clearAllMonsters();
 
     float getGlobalSpeedMultiplier() const;
 

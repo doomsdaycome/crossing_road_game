@@ -59,6 +59,11 @@ LevelData LevelRepository::loadLevel(const std::string& filepath) {
                         lData.items.push_back(item);
                     }
                 }
+                
+                // Đọc thảm bay
+                if (j_lane.size() > 9) {
+                    lData.carpetPositionsX = j_lane[9].get<std::vector<float>>();
+                }
 
                 data.lanes.push_back(lData);
             }
@@ -107,7 +112,8 @@ bool LevelRepository::saveLevel(const std::string& filepath, const LevelData& da
             lData.patternIndex,
             patternId,
             lData.monsterPositionsX,
-            j_items
+            j_items,
+            lData.carpetPositionsX
         });
     }
 

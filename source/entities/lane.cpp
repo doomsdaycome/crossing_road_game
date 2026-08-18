@@ -289,7 +289,29 @@ int Lane::collectItemAt(float playerX) {
             ++it;
         }
     }
-    return 0; 
+    return 0;
+}
+
+int Lane::collectItemWithMagnet(float playerX) {
+    int total = 0;
+    for (auto it = items_.begin(); it != items_.end(); ) {
+        if (std::abs(it->x - playerX) < Config::TILE_SIZE * 3.0f) { // Wider range
+            int earned = 0;
+            if (it->type == ItemType::COIN_1) earned = 1;
+            else if (it->type == ItemType::COIN_3) earned = 3;
+            else if (it->type == ItemType::TREASURE) earned = 50;
+
+            it = items_.erase(it); 
+            total += earned;
+        } else {
+            ++it;
+        }
+    }
+    return total;
+}
+
+void Lane::clearMonsters() {
+    monsters_.clear();
 }
 
 float Lane::getYPosition() const { return yPosition_; }

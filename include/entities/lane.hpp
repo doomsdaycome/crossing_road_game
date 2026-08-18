@@ -67,6 +67,8 @@ public:
     const std::vector<Monster>& getMonsters() const;
     const std::vector<Carpet>& getCarpets() const;
     int collectItemAt(float playerX);
+    int collectItemWithMagnet(float playerX);
+    void clearMonsters();
 
 private:
     void setupWalkAssets();

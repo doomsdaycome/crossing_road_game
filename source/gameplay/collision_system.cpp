@@ -22,6 +22,13 @@ sf::FloatRect scaleRect(const sf::FloatRect& rect, float scaleX, float scaleY) {
 
 // Sửa tham số thành Player& để có thể gọi setRiding()
 bool CollisionSystem::checkPlayerVsMonsters(Player& player, const LaneManager& laneManager) {
+    if (player.getBuffManager().isInvisible()) {
+        // Vẫn gọi setRiding(false) để gỡ thảm cũ, nhưng lát nữa xuống dưới
+        // phần CHASM nó sẽ tự check chạm thảm và setRiding(true) lại.
+        // Tạm thời vẫn để nó rớt vực nếu ở lane CHASM, nhưng tàng hình thì bỏ qua quái thường.
+        // Ta vẫn phải lặp qua các lane CHASM để setRiding!
+    }
+
     sf::FloatRect rawPlayerBox = player.getGlobalBounds();
     
     // Bóp hitbox Player còn 60% bề ngang và 80% chiều cao
@@ -62,6 +69,9 @@ bool CollisionSystem::checkPlayerVsMonsters(Player& player, const LaneManager& l
             continue; // Bỏ qua việc check quái thường cho làn này
         }
 
+        // --- BỎ QUA QUÁI THƯỜNG NẾU ĐANG TÀNG HÌNH ---
+        if (player.getBuffManager().isInvisible()) continue;
+
         // Xử lý Làn thường (ROAD, GRASS)
         for (const auto& monster : lane->getMonsters()) {
             sf::FloatRect rawMonsterBox = monster.getGlobalBounds();
@@ -71,6 +81,11 @@ bool CollisionSystem::checkPlayerVsMonsters(Player& player, const LaneManager& l
 
             // SFML 3.x: Dùng findIntersection thay cho intersects
             if (playerBox.findIntersection(monsterBox).has_value()) {
+                // Đụng phải quái vật, check xem có khiên không
+                if (player.getBuffManager().consumeShield()) {
+                    player.getBuffManager().activateInvisibility(1.0f); // I-frames
+                    return false; // Thoát chết
+                }
                 return true; 
             }
         }
@@ -79,16 +94,25 @@ bool CollisionSystem::checkPlayerVsMonsters(Player& player, const LaneManager& l
 }
 
 int CollisionSystem::checkAndCollectCoins(const Player& player, LaneManager& laneManager) {
-    // Lấy tọa độ thật của nhân vật
     float pX = static_cast<float>(player.getGridX() * Config::TILE_SIZE);
     float pY = static_cast<float>(player.getGridY() * Config::TILE_SIZE);
+    
+    int totalCollected = 0;
+    bool magnetActive = player.getBuffManager().isMagnetActive();
 
     for (const auto& lanePtr : laneManager.getLanes()) {
-        // Tìm đúng cái Làn có tọa độ Y khớp với Y của nhân vật (sai số nhỏ hơn 5px)
-        if (std::abs(lanePtr->getYPosition() - pY) < 5.0f) {
-            // Nhờ Làn đó xử lý việc nhặt vàng và trả về kết quả
-            return lanePtr->collectItemAt(pX);
+        if (magnetActive) {
+            // Check all lanes within 3 TILE_SIZE vertically
+            if (std::abs(lanePtr->getYPosition() - pY) < Config::TILE_SIZE * 3.0f) {
+                totalCollected += lanePtr->collectItemWithMagnet(pX);
+            }
+        } else {
+            // Normal collection on the current lane
+            if (std::abs(lanePtr->getYPosition() - pY) < 5.0f) {
+                totalCollected += lanePtr->collectItemAt(pX);
+                break; // Only one lane matches exactly
+            }
         }
     }
-    return 0;
+    return totalCollected;
 }

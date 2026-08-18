@@ -39,7 +39,8 @@ bool SaveGameRepository::save(const std::string& filepath, const GameSnapshot& s
             lData.patternIndex,
             patternId,
             lData.monsterPositionsX,
-            j_items
+            j_items,
+            lData.carpetPositionsX
         });
     }
 
@@ -102,6 +103,9 @@ std::optional<GameSnapshot> SaveGameRepository::load(const std::string& filepath
                     item.x = j_item[1].get<float>();
                     lData.items.push_back(item);
                 }
+            }
+            if (j_lane.size() > 9) {
+                lData.carpetPositionsX = j_lane[9].get<std::vector<float>>();
             }
 
             snapshot.lanes.push_back(lData);

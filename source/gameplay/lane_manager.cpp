@@ -157,6 +157,12 @@ bool LaneManager::isChasmLane(float laneY) const {
     return false;
 }
 
+void LaneManager::clearAllMonsters() {
+    for (auto& lane : lanes_) {
+        lane->clearMonsters();
+    }
+}
+
 float LaneManager::getGlobalSpeedMultiplier() const {
     return globalSpeedMultiplier_;
 }

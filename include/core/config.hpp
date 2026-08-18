@@ -64,7 +64,7 @@ namespace Config {
     
     // Thuật toán cuốn chiếu (Procedural Generation)
     inline constexpr float ENDLESS_GENERATE_THRESHOLD = 1000.f; // Khoảng cách nhìn trước. Nếu Camera cách mép trên ngần này pixel, tạo đường mới
-    inline constexpr float ENDLESS_LANE_CULL_MARGIN   = 200.f;  // Khoảng cách dọn dẹp. Làn đường nào tụt lại sau Camera 200px sẽ bị xóa sổ
+    inline constexpr float ENDLESS_LANE_CULL_MARGIN   = 800.f;  // Khoảng cách dọn dẹp. Tăng lên 800px để giữ lại các làn bên dưới khi Load Game
     
     // Hệ thống tăng độ khó (Difficulty Curve)
     inline constexpr float ENDLESS_SPEED_INCREMENT = 0.01f;     // Cứ mỗi 1 làn đường mới sinh ra, vận tốc toàn bộ game tăng thêm 1%
@@ -138,6 +138,12 @@ namespace Config {
     inline const std::string FINISH_LINE_TEXTURE = "asset/images/world/bg2.png";
 
     inline const std::string COIN_1_TEXTURE      = "asset/images/ui/item_coin_1.png";
+
+    // --- Buffs ---
+    inline const std::string BUFF_RING_TEXTURE   = "asset/images/entities/buff/buff_ring.png";
+    inline const std::string BUFF_SHIELD_TEXTURE = "asset/images/entities/buff/buff_shield.png";
+    inline const std::string BUFF_CLOAK_TEXTURE  = "asset/images/entities/buff/buff_overcoat.png";
+    inline const std::string BUFF_NOVA_TEXTURE   = "asset/images/entities/buff/buff_hola.png";
     inline const std::string COIN_3_TEXTURE      = "asset/images/ui/item_coin_3.png";
     inline const std::string TREASURE_TEXTURE    = "asset/images/ui/item_treasure.png";
 

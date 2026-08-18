@@ -117,20 +117,44 @@ void ShopState::initDummyItems() {
     }
     
     // BUFFS
+    std::string buffNames[4] = {"Ring of Greed", "Blood Aegis", "Phantom Cloak", "Holy Nova"};
+    int buffCounts[4] = {
+        m_scoreManager_.getMagnetCount(),
+        m_scoreManager_.getShieldCount(),
+        m_scoreManager_.getInvisCount(),
+        m_scoreManager_.getNovaCount()
+    };
+
     for (int i = 0; i < 4; ++i) {
         ShopItem item;
         item.id = 100 + i;
-        item.name = "Buff " + std::to_string(i + 1);
+        item.name = buffNames[i];
         item.price = 50 * (i + 1);
         item.category = ItemCategory::BUFF;
-        item.isUnlocked = false;
-        item.quantity = 0;
+        item.isUnlocked = true;
+        item.quantity = buffCounts[i];
         
         // Define Rect Layout
         float x = 450.f + (i % 2) * 250.f;
         float y = 250.f + (i / 2) * 200.f;
         item.cardRect = sf::FloatRect({x, y}, {200.f, 150.f});
+
+        std::string buffTexPaths[4] = {
+            Config::BUFF_RING_TEXTURE,
+            Config::BUFF_SHIELD_TEXTURE,
+            Config::BUFF_CLOAK_TEXTURE,
+            Config::BUFF_NOVA_TEXTURE
+        };
+
+        const sf::Texture& tex = ResourceManager::instance().getTexture(buffTexPaths[i]);
+        item.iconSprite = std::make_unique<sf::Sprite>(tex);
         
+        // Scale 500x500 xuống cỡ 60x60
+        float scale = 60.f / tex.getSize().x;
+        item.iconSprite->setScale({scale, scale});
+        item.iconSprite->setOrigin({tex.getSize().x / 2.f, tex.getSize().y / 2.f});
+        item.iconSprite->setPosition({x + 150.f, y + 60.f});
+
         m_buffs_.push_back(std::move(item));
     }
 }
@@ -166,7 +190,9 @@ void ShopState::processEvents(Game* game, const std::optional<sf::Event>& event)
                 if (item.cardRect.contains(mousePos)) {
                     // Try to purchase
                     if (!item.isUnlocked || item.category == ItemCategory::BUFF) {
-                        if (m_scoreManager_.spendCoins(item.price)) {
+                        if (item.category == ItemCategory::BUFF && item.quantity >= 5) {
+                            std::cout << "Maxed out: " << item.name << "\n";
+                        } else if (m_scoreManager_.spendCoins(item.price)) {
                             // Success!
                             if (item.category == ItemCategory::SKIN) {
                                 item.isUnlocked = true;
@@ -174,6 +200,11 @@ void ShopState::processEvents(Game* game, const std::optional<sf::Event>& event)
                                 m_scoreManager_.saveHighScore();
                             } else {
                                 item.quantity++;
+                                if (item.id == 100) m_scoreManager_.addMagnet();
+                                else if (item.id == 101) m_scoreManager_.addShield();
+                                else if (item.id == 102) m_scoreManager_.addInvis();
+                                else if (item.id == 103) m_scoreManager_.addNova();
+                                m_scoreManager_.saveHighScore();
                             }
                             std::cout << "Bought: " << item.name << "\n";
                         } else {
@@ -251,20 +282,20 @@ void ShopState::renderItemCard(sf::RenderWindow& window, const ShopItem& item, c
             statusText.setString("Owned / Equip");
             statusText.setFillColor(sf::Color::Green);
         }
+    } else if (item.category == ItemCategory::BUFF && item.quantity >= 5) {
+        statusText.setString("MAX (5/5)");
+        statusText.setFillColor(sf::Color(150, 150, 150));
     } else {
-        statusText.setString("Price: " + std::to_string(item.price));
+        if (item.category == ItemCategory::BUFF) {
+            statusText.setString("Price: " + std::to_string(item.price) + " (Own: " + std::to_string(item.quantity) + ")");
+        } else {
+            statusText.setString("Price: " + std::to_string(item.price));
+        }
         statusText.setFillColor(sf::Color::Yellow);
     }
     window.draw(statusText);
     
-    // Draw quantity for buffs
-    if (item.category == ItemCategory::BUFF) {
-        sf::Text qtyText(font);
-        qtyText.setString("Qty: " + std::to_string(item.quantity));
-        qtyText.setCharacterSize(18);
-        qtyText.setPosition({item.cardRect.position.x + 120.f, item.cardRect.position.y + 110.f});
-        window.draw(qtyText);
-    }
+    // Removed redundant qtyText drawing
     
     // Draw icon/animation if exists
     if (item.iconSprite) {

@@ -28,8 +28,11 @@ public:
     void render(sf::RenderWindow& window) override;
 
 private:
-    GameMode m_mode_;
-    int m_currentLevel_;
+    void initHUD();
+    void syncBuffsToScore();
+
+    GameMode m_mode_ = GameMode::CLASSIC;
+    int m_currentLevel_ = 1;
     bool isGameStarted_ = false;
 
     bool m_isMonsterDeath_ = false;
@@ -58,4 +61,11 @@ private:
     Player m_player_;
     ScoreManager m_score_;
     GiantEye m_giantEye;
+
+    sf::RectangleShape m_whiteFlashRect_;
+    float m_flashAlpha_ = 0.f;
+
+    std::vector<sf::CircleShape> m_buffIcons_;
+    std::vector<sf::Text> m_buffCounts_;
+    std::vector<sf::Text> m_buffKeys_;
 };

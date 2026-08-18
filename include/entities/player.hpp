@@ -5,11 +5,13 @@
 #include <optional>
 #include <functional>
 #include "utils/animator.hpp"
+#include "gameplay/buff_manager.hpp"
 
 class Player {
 private:
     std::unique_ptr<sf::Sprite> m_sprite_;
     std::unique_ptr<sf::Sprite> m_shadowSprite_;
+    sf::CircleShape m_magnetCircle_;
     Animator m_animator_;
 
     float m_speed_;
@@ -55,4 +57,10 @@ public:
     void setOnDeath(std::function<void()> callback);
 
     void setRiding(bool isRiding, float speed);
+
+    BuffManager& getBuffManager() { return m_buffManager_; }
+    const BuffManager& getBuffManager() const { return m_buffManager_; }
+
+private:
+    BuffManager m_buffManager_;
 };

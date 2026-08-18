@@ -66,6 +66,7 @@ PlayingState::PlayingState(GameMode gameMode, int level) {
     m_player_.setSkin(m_score_.getEquippedSkin());
     m_minGridY_ = m_player_.getGridY();
 
+    initHUD();
     ResourceManager::instance().playMusic(Config::BGM_PLAYING);
 }
 
@@ -102,12 +103,23 @@ PlayingState::PlayingState(const GameSnapshot& snapshot) {
     m_score_.loadScore(snapshot.score);
 
     m_camera_.setCenterY(snapshot.cameraY);
+
+    // --- CƠ CHẾ BẢO VỆ NGƯỜI CHƠI KHI LOAD GAME ---
+    // Đảm bảo nhân vật không bị nằm sát mép dưới màn hình (cách ít nhất 250px)
+    float playerY = m_player_.getGridY() * Config::TILE_SIZE;
+    float cameraBottom = m_camera_.getView().getCenter().y + (Config::WINDOW_HEIGHT / 2.f);
+    
+    if (cameraBottom - playerY < 250.f) {
+        float newCameraBottom = playerY + 250.f;
+        m_camera_.setCenterY(newCameraBottom - (Config::WINDOW_HEIGHT / 2.f));
+    }
     m_coinsCollectedInRun_ = snapshot.coinsInRun;
 
     m_score_.loadHighScore();
     m_player_.setSkin(m_score_.getEquippedSkin());
     m_minGridY_ = m_player_.getGridY();
 
+    initHUD();
     ResourceManager::instance().playMusic(Config::BGM_PLAYING);
 }
 
@@ -128,6 +140,7 @@ void PlayingState::processEvents(Game* game, const std::optional<sf::Event>& eve
                 snapshot.lanes = m_laneManager_.exportSaveData();
                 snapshot.cameraY = m_camera_.getView().getCenter().y; 
                 snapshot.coinsInRun = m_coinsCollectedInRun_;
+                syncBuffsToScore();
                 m_score_.saveHighScore(); 
 
                 game->pushState(new SettingState(true, snapshot));
@@ -144,6 +157,18 @@ void PlayingState::processEvents(Game* game, const std::optional<sf::Event>& eve
             keyPress->code == sf::Keyboard::Key::S || keyPress->code == sf::Keyboard::Key::Down) 
         {
             if (!isGameStarted_) isGameStarted_ = true;
+        }
+
+        // Kích hoạt Buff
+        if (keyPress->code == sf::Keyboard::Key::Num1) {
+            m_player_.getBuffManager().consumeMagnetItem(10.f); // Magnet 10s
+        } else if (keyPress->code == sf::Keyboard::Key::Num2) {
+            m_player_.getBuffManager().consumeInvisibilityItem(5.f); // Invisibility 5s
+        } else if (keyPress->code == sf::Keyboard::Key::Space) {
+            if (m_player_.getBuffManager().consumeHolyNova()) {
+                m_laneManager_.clearAllMonsters();
+                m_flashAlpha_ = 255.f;
+            }
         }
     }
     m_player_.processEvents(event, [this](float targetY) {
@@ -180,6 +205,7 @@ void PlayingState::update(Game* game, float dt) {
             
             // Lưu tổng vàng toàn game
             m_score_.addTotalCoins(m_coinsCollectedInRun_);
+            syncBuffsToScore();
             m_score_.saveHighScore();
 
             // Chuyển State (Cập nhật đủ 7 tham số)
@@ -204,6 +230,7 @@ void PlayingState::update(Game* game, float dt) {
 
         if (m_shakeTimer_ <= 0.f) {
             m_score_.addTotalCoins(m_coinsCollectedInRun_);
+            syncBuffsToScore();
             m_score_.saveHighScore();
             
             game->pushState(new GameOverState(
@@ -225,6 +252,19 @@ void PlayingState::update(Game* game, float dt) {
     float scaledDt = dt * slowMoFactor;
 
     m_player_.update(scaledDt);
+
+    // Cập nhật hiệu ứng Flash (Holy Nova)
+    if (m_flashAlpha_ > 0.f) {
+        m_flashAlpha_ -= 500.f * dt;
+        if (m_flashAlpha_ < 0.f) m_flashAlpha_ = 0.f;
+        m_whiteFlashRect_.setFillColor(sf::Color(255, 255, 255, static_cast<std::uint8_t>(m_flashAlpha_)));
+        
+        m_whiteFlashRect_.setSize({static_cast<float>(Config::VIEW_WIDTH), static_cast<float>(Config::VIEW_HEIGHT)});
+        m_whiteFlashRect_.setPosition({
+            m_camera_.getView().getCenter().x - Config::VIEW_WIDTH / 2.f,
+            m_camera_.getView().getCenter().y - Config::VIEW_HEIGHT / 2.f
+        });
+    }
 
     // XUỐNG DÒNG VÀNG: Mở khóa logic nhặt vàng cho CẢ 2 CHẾ ĐỘ
     m_coinsCollectedInRun_ += CollisionSystem::checkAndCollectCoins(m_player_, m_laneManager_);
@@ -255,6 +295,26 @@ void PlayingState::update(Game* game, float dt) {
         float playerWorldY = static_cast<float>(m_player_.getGridY() * Config::TILE_SIZE);
         if (playerWorldY <= m_finishLineY_ + Config::TILE_SIZE) {
             m_isVictory_ = true;
+        }
+    }
+    
+    // --- HUD Cập nhật số lượng Buff ---
+    int counts[4] = {
+        m_player_.getBuffManager().getMagnetCount(),
+        m_player_.getBuffManager().getShieldCount(),
+        m_player_.getBuffManager().getInvisCount(),
+        m_player_.getBuffManager().getNovaCount()
+    };
+    for (int i = 0; i < 4; ++i) {
+        m_buffCounts_[i].setString("x" + std::to_string(counts[i]));
+        if (counts[i] <= 0) {
+            m_buffIcons_[i].setFillColor(sf::Color(100, 100, 100, 150));
+            m_buffCounts_[i].setFillColor(sf::Color(150, 150, 150, 150));
+            m_buffKeys_[i].setFillColor(sf::Color(150, 150, 150, 150));
+        } else {
+            m_buffIcons_[i].setFillColor(sf::Color::White); // Không tô màu đè lên ảnh
+            m_buffCounts_[i].setFillColor(sf::Color::White);
+            m_buffKeys_[i].setFillColor(sf::Color::White);
         }
     }
 
@@ -341,6 +401,9 @@ void PlayingState::render(sf::RenderWindow& window) {
         window.draw(*m_fightEffect_);
     }
 
+    if (m_flashAlpha_ > 0.f) {
+        window.draw(m_whiteFlashRect_);
+    }
 
     // Reset View để vẽ HUD không bị dính Camera
     window.setView(window.getDefaultView());
@@ -348,8 +411,73 @@ void PlayingState::render(sf::RenderWindow& window) {
 
     if (m_hudText_ && !m_introCutscene_.isBusy()) {
         window.draw(*m_hudText_);
+        for (int i = 0; i < 4; ++i) {
+            window.draw(m_buffIcons_[i]);
+            window.draw(m_buffCounts_[i]);
+            window.draw(m_buffKeys_[i]);
+        }
     }
     m_giantEye.render(window);
 
     m_introCutscene_.render(window);
+}
+
+void PlayingState::initHUD() {
+    m_player_.getBuffManager().setCounts(
+        m_score_.getMagnetCount(),
+        m_score_.getShieldCount(),
+        m_score_.getInvisCount(),
+        m_score_.getNovaCount()
+    );
+
+    const sf::Font& mainFont = ResourceManager::instance().getFont(Config::MAIN_FONT);
+    std::string keys[4] = {"1", "Pas", "2", "Spc"};
+    std::string texPaths[4] = {
+        Config::BUFF_RING_TEXTURE,
+        Config::BUFF_SHIELD_TEXTURE,
+        Config::BUFF_CLOAK_TEXTURE,
+        Config::BUFF_NOVA_TEXTURE
+    };
+
+    m_buffIcons_.clear();
+    m_buffCounts_.clear();
+    m_buffKeys_.clear();
+
+    for (int i = 0; i < 4; ++i) {
+        float startX = 20.f + i * 80.f;
+        float startY = Config::VIEW_HEIGHT - 60.f; 
+        
+        m_buffIcons_.emplace_back();
+        m_buffIcons_[i].setRadius(25.f);
+        
+        const sf::Texture& tex = ResourceManager::instance().getTexture(texPaths[i]);
+        m_buffIcons_[i].setTexture(&tex, true);
+        
+        m_buffIcons_[i].setFillColor(sf::Color::White); // Trắng bóc để hiện đúng màu ảnh gốc
+        m_buffIcons_[i].setOutlineColor(sf::Color::Black);
+        m_buffIcons_[i].setOutlineThickness(2.f);
+        m_buffIcons_[i].setPosition({startX, startY}); 
+        
+        m_buffCounts_.emplace_back(mainFont);
+        m_buffCounts_[i].setCharacterSize(18);
+        m_buffCounts_[i].setFillColor(sf::Color::White);
+        m_buffCounts_[i].setOutlineColor(sf::Color::Black);
+        m_buffCounts_[i].setOutlineThickness(2.f);
+        m_buffCounts_[i].setPosition({startX + 35.f, startY + 30.f});
+        
+        m_buffKeys_.emplace_back(mainFont);
+        m_buffKeys_[i].setString(keys[i]);
+        m_buffKeys_[i].setCharacterSize(16);
+        m_buffKeys_[i].setFillColor(sf::Color::White);
+        m_buffKeys_[i].setOutlineColor(sf::Color::Black);
+        m_buffKeys_[i].setOutlineThickness(2.f);
+        m_buffKeys_[i].setPosition({startX + 10.f, startY + 5.f});
+    }
+}
+
+void PlayingState::syncBuffsToScore() {
+    m_score_.setMagnetCount(m_player_.getBuffManager().getMagnetCount());
+    m_score_.setShieldCount(m_player_.getBuffManager().getShieldCount());
+    m_score_.setInvisCount(m_player_.getBuffManager().getInvisCount());
+    m_score_.setNovaCount(m_player_.getBuffManager().getNovaCount());
 }

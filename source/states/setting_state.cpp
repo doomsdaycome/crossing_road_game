@@ -19,8 +19,18 @@ SettingState::SettingState(bool isFromGameplay, GameSnapshot snapshot)
     sf::Color darkBrown(60, 40, 20);
 
     float centerX = Config::WINDOW_WIDTH / 2.f - 50.f;
-    float startY = 180.f;
+    float startY = 280.f;
     float gapY = 150.f;
+
+    // TITLE: SETTING
+    m_titleText_ = std::make_unique<sf::Text>(mainFont);
+    m_titleText_->setString("SETTING");
+    m_titleText_->setCharacterSize(60);
+    m_titleText_->setFillColor(darkBrown);
+    m_titleText_->setOutlineColor(sf::Color::White);
+    m_titleText_->setOutlineThickness(2.f);
+    centerOrigin(*m_titleText_);
+    m_titleText_->setPosition({Config::WINDOW_WIDTH / 2.f, 180.f});
 
     // ==========================================
     // HÀNG 1: ĐIỀU CHỈNH MUSIC
@@ -144,54 +154,13 @@ SettingState::SettingState(bool isFromGameplay, GameSnapshot snapshot)
     sfxMuteBtn.action = ButtonAction::SfxMute;
     m_buttons_.push_back(std::move(sfxMuteBtn));
 
-    // ==========================================
-    // HÀNG 3: CHỌN THEME (GIAO DIỆN)
-    // ==========================================
-    m_themeLabel_ = std::make_unique<sf::Text>(mainFont);
-    m_themeLabel_->setString("THEME");
-    m_themeLabel_->setCharacterSize(40);
-    m_themeLabel_->setFillColor(darkBrown);
-    m_themeLabel_->setPosition({centerX - 250.f, startY + 2.f * gapY});
-
-    // Nút <
-    UIButton themeDownBtn(mainFont);
-    themeDownBtn.sprite = std::make_unique<sf::Sprite>(squareTex);
-    centerOrigin(*(themeDownBtn.sprite));
-    themeDownBtn.sprite->setPosition({centerX + 50.f, startY + 2.f * gapY + 20.f});
-    themeDownBtn.text.setString("<");
-    themeDownBtn.text.setCharacterSize(35);
-    themeDownBtn.text.setFillColor(darkBrown);
-    centerOrigin(themeDownBtn.text);
-    themeDownBtn.text.setPosition({centerX + 50.f, startY + 2.f * gapY + 20.f});
-    themeDownBtn.action = ButtonAction::ThemePrev; // Nhớ khai báo ThemePrev trong enum nhé
-    m_buttons_.push_back(std::move(themeDownBtn));
-
-    // Hiển thị tên Theme hiện tại
-    m_themeValueText_ = std::make_unique<sf::Text>(mainFont);
-    m_themeValueText_->setString(m_themeOptions_[m_themeIndex_]);
-    m_themeValueText_->setCharacterSize(35);
-    m_themeValueText_->setFillColor(darkBrown);
-    centerOrigin(*m_themeValueText_);
-    m_themeValueText_->setPosition({centerX + 200.f, startY + 2.f * gapY + 20.f});
-
-    // Nút >
-    UIButton themeUpBtn(mainFont);
-    themeUpBtn.sprite = std::make_unique<sf::Sprite>(squareTex);
-    centerOrigin(*(themeUpBtn.sprite));
-    themeUpBtn.sprite->setPosition({centerX + 350.f, startY + 2.f * gapY + 20.f});
-    themeUpBtn.text.setString(">");
-    themeUpBtn.text.setCharacterSize(35);
-    themeUpBtn.text.setFillColor(darkBrown);
-    centerOrigin(themeUpBtn.text);
-    themeUpBtn.text.setPosition({centerX + 350.f, startY + 2.f * gapY + 20.f});
-    themeUpBtn.action = ButtonAction::ThemeNext; // Khai báo ThemeNext trong enum
-    m_buttons_.push_back(std::move(themeUpBtn));
+    // HÀNG 3 THEME ĐÃ BỊ XÓA
 
 
     // ==========================================
     // HÀNG CUỐI: CÁC NÚT ĐIỀU HƯỚNG BÊN DƯỚI
     // ==========================================
-    float bottomY = startY + 3.0f * gapY; 
+    float bottomY = startY + 2.0f * gapY; 
 
     // --- 1. NÚT BACK (Luôn hiển thị) ---
     UIButton backBtn(mainFont);
@@ -375,34 +344,7 @@ void SettingState::processEvents(Game* game, const std::optional<sf::Event>& eve
                             centerOrigin(*m_sfxValueText_);
                             break;
 
-                        case ButtonAction::ThemePrev:
-                            m_themeIndex_--; // Lùi lại 1 index
-                            
-                            // Nếu lùi quá số 0 thì vòng ngược lại theme cuối cùng
-                            if (m_themeIndex_ < 0) {
-                                m_themeIndex_ = m_themeOptions_.size() - 1; 
-                            }
-                            
-                            // Cập nhật chữ hiển thị và căn giữa lại
-                            m_themeValueText_->setString(m_themeOptions_[m_themeIndex_]);
-                            centerOrigin(*m_themeValueText_);
-                            
-                            // [MỞ RỘNG TƯƠNG LAI] Ông có thể gọi hàm báo cho Shop 
-                            // hoặc ResourceManager đổi giao diện ngay tại đây
-                            break;
-
-                        case ButtonAction::ThemeNext:
-                            m_themeIndex_++; // Tiến tới 1 index
-                            
-                            // Nếu tiến lố qua tổng số theme thì vòng lại theme đầu tiên (số 0)
-                            if (m_themeIndex_ >= m_themeOptions_.size()) {
-                                m_themeIndex_ = 0; 
-                            }
-                            
-                            // Cập nhật chữ hiển thị và căn giữa lại
-                            m_themeValueText_->setString(m_themeOptions_[m_themeIndex_]);
-                            centerOrigin(*m_themeValueText_);
-                            break;
+                        // THEME ACTIONS REMOVED
 
                         case ButtonAction::Back:
                             game->popState();
@@ -448,13 +390,11 @@ void SettingState::update(Game* game, float dt) {
 
 void SettingState::render(sf::RenderWindow& window) {
     window.draw(*m_bgOption_);
-
+    window.draw(*m_titleText_);
     window.draw(*m_musicLabel_);
     window.draw(*m_musicValueText_);
     window.draw(*m_sfxLabel_);
     window.draw(*m_sfxValueText_);
-    window.draw(*m_themeValueText_);
-    window.draw(*m_themeLabel_);
 
     // Vẽ toàn bộ nút
     for (const auto& btn : m_buttons_) {

@@ -42,12 +42,22 @@ public:
                 equippedSkin_ = 0;
                 unlockedSkins_ = 1; // Bitmask: skin 0 is unlocked
             }
+            if (!(file >> magnetCount_ >> shieldCount_ >> invisCount_ >> novaCount_)) {
+                magnetCount_ = 0;
+                shieldCount_ = 0;
+                invisCount_ = 0;
+                novaCount_ = 0;
+            }
             file.close();
         } else {
             bestScore_ = 0; 
             totalCoins_ = 0;
             equippedSkin_ = 0;
             unlockedSkins_ = 1;
+            magnetCount_ = 0;
+            shieldCount_ = 0;
+            invisCount_ = 0;
+            novaCount_ = 0;
         }
     }
 
@@ -55,7 +65,8 @@ public:
     void saveHighScore() const {
         std::ofstream file("data/highscore.txt");
         if (file.is_open()) {
-            file << bestScore_ << " " << totalCoins_ << " " << equippedSkin_ << " " << unlockedSkins_;
+            file << bestScore_ << " " << totalCoins_ << " " << equippedSkin_ << " " << unlockedSkins_ << " "
+                 << magnetCount_ << " " << shieldCount_ << " " << invisCount_ << " " << novaCount_;
             file.close();
         }
     }
@@ -71,10 +82,32 @@ public:
         unlockedSkins_ |= (1 << id);
     }
 
+    // --- QUẢN LÝ BUFFS ---
+    int getMagnetCount() const { return magnetCount_; }
+    void setMagnetCount(int c) { magnetCount_ = c; }
+    void addMagnet() { magnetCount_++; }
+
+    int getShieldCount() const { return shieldCount_; }
+    void setShieldCount(int c) { shieldCount_ = c; }
+    void addShield() { shieldCount_++; }
+
+    int getInvisCount() const { return invisCount_; }
+    void setInvisCount(int c) { invisCount_ = c; }
+    void addInvis() { invisCount_++; }
+
+    int getNovaCount() const { return novaCount_; }
+    void setNovaCount(int c) { novaCount_ = c; }
+    void addNova() { novaCount_++; }
+
 private:
     int score_ = 0;
     int bestScore_ = 0;
     int totalCoins_ = 0;
     int equippedSkin_ = 0;
     int unlockedSkins_ = 1; // 0b0001 (Skin 0 is always unlocked)
+
+    int magnetCount_ = 0;
+    int shieldCount_ = 0;
+    int invisCount_ = 0;
+    int novaCount_ = 0;
 };
