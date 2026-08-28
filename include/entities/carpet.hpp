@@ -4,23 +4,24 @@
 #include <memory>
 
 class Carpet {
-private:
-    std::unique_ptr<sf::Sprite> m_sprite_;
-    
-    float m_speed_ = 0.f;
-    int m_direction_ = 1;
+ private:
+  std::unique_ptr<sf::Sprite> m_sprite_;
 
-    sf::Vector2f m_logicalPos_;
+  float m_speed_ = 0.f;
+  int m_direction_ = 1;
 
-public:
-    Carpet(const sf::Texture& texture, float startX, float startY, float speed, int direction);
+  sf::Vector2f m_logicalPos_;
 
-    void update(float deltaTime, bool isRedLight);
-    void render(sf::RenderWindow& window);
+ public:
+  Carpet(const sf::Texture& texture, float startX, float startY, float speed,
+         int direction);
 
-    float getPositionX() const;
-    bool isOffScreen() const;
-    sf::FloatRect getGlobalBounds() const;
-    
-    float getSpeed() const;
+  void update(float deltaTime, bool isRedLight);
+  void render(sf::RenderWindow& window);
+
+  float getPositionX() const;
+  bool isOffScreen() const;
+  sf::FloatRect getGlobalBounds() const;
+
+  float getSpeed() const;
 };

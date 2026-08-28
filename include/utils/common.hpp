@@ -19,4 +19,4 @@ inline constexpr LoggerType DEBUG = LoggerType::DEBUG;
 inline constexpr LoggerType INFO = LoggerType::INFO;
 inline constexpr LoggerType WARN = LoggerType::WARN;
 inline constexpr LoggerType ERROR = LoggerType::ERROR;
-} // namespace crossing
+}  // namespace crossing

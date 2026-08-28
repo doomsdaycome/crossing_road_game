@@ -1,13 +1,13 @@
 #pragma once
 
-#include "states/state.hpp"
-#include "entities/player.hpp"
-#include "entities/giant_eye.hpp"
-#include "gameplay/lane_manager.hpp"
-#include "gameplay/camera_controller.hpp"
-#include "gameplay/score_manager.hpp"
-#include "gameplay/intro_cutscene.hpp"
 #include "data/game_snapshot.hpp"
+#include "entities/giant_eye.hpp"
+#include "entities/player.hpp"
+#include "gameplay/camera_controller.hpp"
+#include "gameplay/intro_cutscene.hpp"
+#include "gameplay/lane_manager.hpp"
+#include "gameplay/score_manager.hpp"
+#include "states/state.hpp"
 
 // ==========================================
 // PLAYING STATE
@@ -16,56 +16,58 @@
 // tu lam tat ca moi thu nhu ban goc.
 // ==========================================
 class PlayingState : public State {
-public:
-    // New game
-    PlayingState(GameMode gameMode, int level = 0);
+ public:
+  // New game
+  PlayingState(GameMode gameMode, int level = 0);
 
-    // Load game: khoi tao lai tu du lieu da luu
-    explicit PlayingState(const GameSnapshot& snapshot);
+  // Load game: khoi tao lai tu du lieu da luu
+  explicit PlayingState(const GameSnapshot& snapshot);
 
-    void processEvents(Game* game, const std::optional<sf::Event>& event) override;
-    void update(Game* game, float dt) override;
-    void render(sf::RenderWindow& window) override;
+  void processEvents(Game* game,
+                     const std::optional<sf::Event>& event) override;
+  void update(Game* game, float dt) override;
+  void render(sf::RenderWindow& window) override;
 
-private:
-    void initHUD();
-    void syncBuffsToScore();
+ private:
+  void initHUD();
+  void syncBuffsToScore();
 
-    GameMode m_mode_ = GameMode::CLASSIC;
-    int m_currentLevel_ = 1;
-    bool isGameStarted_ = false;
+  GameMode m_mode_ = GameMode::CLASSIC;
+  int m_currentLevel_ = 1;
+  bool isGameStarted_ = false;
 
-    bool m_isMonsterDeath_ = false;
-    std::unique_ptr<sf::Text> m_fightEffect_;
+  bool m_isMonsterDeath_ = false;
+  std::unique_ptr<sf::Text> m_fightEffect_;
 
-    std::unique_ptr<sf::Sprite> m_finishLineSprite_;
-    float m_finishLineY_; // Tọa độ Y của vạch đích
-    
-    bool m_isVictory_ = false;   // Cờ báo hiệu đã chạm đích
-    float m_victoryTimer_ = 0.f; // Thời gian chờ trước khi văng ra màn hình kết thúc
+  std::unique_ptr<sf::Sprite> m_finishLineSprite_;
+  float m_finishLineY_;  // Tọa độ Y của vạch đích
 
-    bool m_isCameraDeath_ = false;   // Cờ đánh dấu đang bị camera nuốt
-    float m_shakeTimer_ = 0.5f;      // Thời gian rung màn hình (0.5 giây)
+  bool m_isVictory_ = false;  // Cờ báo hiệu đã chạm đích
+  float m_victoryTimer_ =
+      0.f;  // Thời gian chờ trước khi văng ra màn hình kết thúc
 
-    LevelData m_currentLevelData_; 
-    int m_coinsCollectedInRun_ = 0; // Đếm số vàng ăn được trong ván này
-    int m_minGridY_ = 9999;
+  bool m_isCameraDeath_ = false;  // Cờ đánh dấu đang bị camera nuốt
+  float m_shakeTimer_ = 0.5f;     // Thời gian rung màn hình (0.5 giây)
 
-    std::unique_ptr<sf::Text> m_hudText_;
+  LevelData m_currentLevelData_;
+  int m_coinsCollectedInRun_ = 0;  // Đếm số vàng ăn được trong ván này
+  int m_minGridY_ = 9999;
 
-    std::unique_ptr<sf::Sprite> m_topOverlaySprite_;
+  std::unique_ptr<sf::Text> m_hudText_;
 
-    IntroCutscene m_introCutscene_;
-    CameraController m_camera_;
-    LaneManager m_laneManager_;
-    Player m_player_;
-    ScoreManager m_score_;
-    GiantEye m_giantEye;
+  std::unique_ptr<sf::Sprite> m_topOverlaySprite_;
 
-    sf::RectangleShape m_whiteFlashRect_;
-    float m_flashAlpha_ = 0.f;
+  IntroCutscene m_introCutscene_;
+  CameraController m_camera_;
+  LaneManager m_laneManager_;
+  Player m_player_;
+  ScoreManager m_score_;
+  GiantEye m_giantEye;
 
-    std::vector<sf::CircleShape> m_buffIcons_;
-    std::vector<sf::Text> m_buffCounts_;
-    std::vector<sf::Text> m_buffKeys_;
+  sf::RectangleShape m_whiteFlashRect_;
+  float m_flashAlpha_ = 0.f;
+
+  std::vector<sf::CircleShape> m_buffIcons_;
+  std::vector<sf::Text> m_buffCounts_;
+  std::vector<sf::Text> m_buffKeys_;
 };

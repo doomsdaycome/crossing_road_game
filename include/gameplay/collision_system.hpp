@@ -1,4 +1,5 @@
 #pragma once
+
 #include "data/level_data.hpp"
 
 class Player;
@@ -11,9 +12,12 @@ class LaneManager;
 // Day la phan logic BI THIEU HOAN TOAN o ban goc.
 // ==========================================
 class CollisionSystem {
-public:
-    static bool checkPlayerVsMonsters(Player& player, const LaneManager& laneManager);
-    static int checkAndCollectCoins(const Player& player, LaneManager& laneManager);
-private:
-    CollisionSystem() = delete;
+ public:
+  static bool checkPlayerVsMonsters(Player& player,
+                                    const LaneManager& laneManager);
+  static int checkAndCollectCoins(const Player& player,
+                                  LaneManager& laneManager);
+
+ private:
+  CollisionSystem() = delete;
 };

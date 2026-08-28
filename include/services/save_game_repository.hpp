@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <optional>
+#include <string>
+
 #include "data/game_snapshot.hpp"
 
 // ==========================================
@@ -10,12 +11,12 @@
 // load() gio da tra ve du lieu that su (ban goc chi la stub in ra console).
 // ==========================================
 class SaveGameRepository {
-public:
-    // Thêm chữ static vào đây
-    static bool save(const std::string& filepath, const GameSnapshot& snapshot);
-    static std::optional<GameSnapshot> load(const std::string& filepath);
-    
-private:
-    // Ngăn không cho ai tạo ra object của class này bằng cách khóa constructor
-    SaveGameRepository() = delete; 
+ public:
+  // Thêm chữ static vào đây
+  static bool save(const std::string& filepath, const GameSnapshot& snapshot);
+  static std::optional<GameSnapshot> load(const std::string& filepath);
+
+ private:
+  // Ngăn không cho ai tạo ra object của class này bằng cách khóa constructor
+  SaveGameRepository() = delete;
 };

@@ -1,7 +1,8 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "utils/utils.hpp"
 #include <optional>
+
+#include "utils/utils.hpp"
 
 class Game;
 
@@ -9,58 +10,55 @@ class Game;
 // ĐỊNH NGHĨA HÀNH ĐỘNG NÚT DÙNG CHUNG CHO TOÀN GAME
 // ==========================================
 enum class ButtonAction {
-    None,       // Mặc định, không làm gì cả
-    Start,      // Bắt đầu game
-    Continue,   // Chơi tiếp
-    Shop,       // Vào cửa hàng
-    Scoreboard, // Xem bảng xếp hạng
-    Option,     // Cài đặt
-    Exit,       // Thoát game
-    Back,       // (Dành cho OptionState/ShopState) Trở về màn hình trước
-    Classic,
-    Endless,
-    SelectLevel,
-    Tutorial,
-    NextPage,
-    PrevPage,
-    MusicUp,
-    MusicDown,
-    SfxUp,
-    SfxDown,
-    ThemePrev,
-    ThemeNext,
-    Home,
-    SaveGame,
-    Restart,
-    MusicMute,
-    SfxMute
+  None,        // Mặc định, không làm gì cả
+  Start,       // Bắt đầu game
+  Continue,    // Chơi tiếp
+  Shop,        // Vào cửa hàng
+  Scoreboard,  // Xem bảng xếp hạng
+  Option,      // Cài đặt
+  Exit,        // Thoát game
+  Back,        // (Dành cho OptionState/ShopState) Trở về màn hình trước
+  Classic,
+  Endless,
+  SelectLevel,
+  Tutorial,
+  NextPage,
+  PrevPage,
+  MusicUp,
+  MusicDown,
+  SfxUp,
+  SfxDown,
+  ThemePrev,
+  ThemeNext,
+  Home,
+  SaveGame,
+  Restart,
+  MusicMute,
+  SfxMute
 };
 
-
-enum class GameMode {
-    CLASSIC,
-    ENDLESS
-};
+enum class GameMode { CLASSIC, ENDLESS };
 
 // ==========================================
 // CẤU TRÚC NÚT BẤM DÙNG CHUNG CHO MỌI STATE
 // ==========================================
 struct UIButton {
-    std::unique_ptr<sf::Sprite> sprite;
-    sf::Text text;
-    ButtonAction action = ButtonAction::None;
+  std::unique_ptr<sf::Sprite> sprite;
+  sf::Text text;
+  ButtonAction action = ButtonAction::None;
 
-    int actionValue = -1;
+  int actionValue = -1;
 
-    // Khởi tạo bắt buộc phải có Font (Đặc thù của SFML 3.x)
-    explicit UIButton(const sf::Font& font) : text(font) {}
+  // Khởi tạo bắt buộc phải có Font (Đặc thù của SFML 3.x)
+  explicit UIButton(const sf::Font& font) : text(font) {}
 };
 
 class State {
-public:
-    virtual ~State() = default;
+ public:
+  virtual ~State() = default;
 
-    virtual void processEvents(Game* game, const std::optional<sf::Event>& event) = 0;
-    virtual void update(Game* game, float dt) = 0;
-    virtual void render(sf::RenderWindow& window) = 0;
+  virtual void processEvents(Game* game,
+                             const std::optional<sf::Event>& event) = 0;
+  virtual void update(Game* game, float dt) = 0;
+  virtual void render(sf::RenderWindow& window) = 0;
 };
