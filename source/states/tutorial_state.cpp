@@ -45,34 +45,39 @@ TutorialState::TutorialState()
 
   const auto& guideTex = rm.getTexture(Config::GUIDE_TEXTURE);
   m_guide_ = std::make_unique<sf::Sprite>(guideTex);
+  float guideScale = 1.5f;
+  m_guide_->setScale({guideScale, guideScale});
 
   // ==========================================
-  // KHU VỰC TỰ CHỈNH VỊ TRÍ
+  // KHU VỰC TỰ CHỈNH VỊ TRÍ & CLIPPING
   // ==========================================
 
-  // 1. Vị trí ảnh cuộn giấy (guide.png)
-  // Cast to float to prevent unsigned integer underflow!
-  float startX = (static_cast<float>(Config::WINDOW_WIDTH) -
-                  static_cast<float>(guideTex.getSize().x)) /
-                 2.f;
-  float startY = -323.f;
-
-  // 2. Vị trí thanh gỗ che (scroll_top.png)
-  // Tự do thay đổi số ở đây (bạn đang để 71 và 187)
-  float scrollTopX = 71.f;
+  // 1. Căn giữa thanh gỗ che trên cùng (scroll_top.png)
+  const auto& topTex = rm.getTexture(Config::SCROLL_TOP_TEXTURE);
+  float topScale = 1.5f;
+  float scrollTopX = (static_cast<float>(Config::WINDOW_WIDTH) -
+                      static_cast<float>(topTex.getSize().x) * topScale) /
+                     2.f;
   float scrollTopY = 15.f;
-  float topScale = 1.0f;
 
-  // 3. Vị trí Y của màn che (Ranh giới mà cuộn giấy chui xuống và biến mất)
-  // Nếu màn che bị quá cao hoặc thấp, bạn chỉ cần thay đổi số m_clipY_ này!
-  m_clipY_ = scrollTopY + 45.f;  // Cộng thêm một đoạn để giấy nằm dưới mép gỗ
+  // 2. Ranh giới clipping (m_clipY_): Dời điểm bắt đầu view xuống dưới mép trên 
+  // của scroll_top khoảng 35px để thân giấy chui hoàn toàn bên dưới thanh gỗ.
+  m_clipY_ = scrollTopY + 35.f; 
   m_clipH_ = static_cast<float>(Config::WINDOW_HEIGHT) - m_clipY_;
+
+  // 3. Căn giữa vị trí ảnh cuộn giấy (guide.png)
+  float startX = (static_cast<float>(Config::WINDOW_WIDTH) -
+                  static_cast<float>(guideTex.getSize().x) * guideScale) /
+                 2.f;
+  
+  // Đặt startY = m_clipY_ để khi cuộn ở đỉnh (scrollOffset = 0),
+  // mép trên của giấy khớp chính xác với mép clipping nằm dưới thanh gỗ.
+  float startY = m_clipY_ - 35.0f;
 
   // ==========================================
 
   m_guide_->setPosition({std::round(startX), std::round(startY)});
 
-  const auto& topTex = rm.getTexture(Config::SCROLL_TOP_TEXTURE);
   m_scrollTop_ = std::make_unique<sf::Sprite>(topTex);
   m_scrollTop_->setScale({topScale, topScale});
   m_scrollTop_->setPosition({std::round(scrollTopX), std::round(scrollTopY)});
@@ -92,7 +97,7 @@ TutorialState::TutorialState()
   m_scrollView_.setCenter(
       {Config::WINDOW_WIDTH / 2.f, m_clipY_ + m_clipH_ / 2.f});
 
-  float totalScrollHeight = startY + static_cast<float>(guideTex.getSize().y);
+  float totalScrollHeight = startY + static_cast<float>(guideTex.getSize().y) * guideScale;
   m_maxScroll_ =
       totalScrollHeight - static_cast<float>(Config::WINDOW_HEIGHT) + 100.f;
   if (m_maxScroll_ < 0.f) m_maxScroll_ = 0.f;
