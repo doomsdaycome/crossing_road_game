@@ -11,15 +11,36 @@ endif()
 
 find_package(SFML 3.1 REQUIRED COMPONENTS System Window Graphics Audio Network)
 
-add_executable(crossing
-    source/crossing.cpp
+file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS source/*.cpp)
+
+# add_executable(main
+#     source/main.cpp
+#     source/core/CGAME.cpp
+#     source/states/MenuState.cpp
+#     source/states/PlayingState.cpp
+# )
+
+add_executable(main ${SOURCE_FILES})
+
+add_custom_command(
+    TARGET main POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/asset"
+    "$<TARGET_FILE_DIR:main>/asset"
 )
 
-target_include_directories(crossing PRIVATE
+add_custom_command(
+    TARGET main POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/data"
+    "$<TARGET_FILE_DIR:main>/data"
+)
+
+target_include_directories(main PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
-target_link_libraries(crossing PRIVATE
+target_link_libraries(main PRIVATE
     SFML::System
     SFML::Window
     SFML::Graphics
@@ -28,10 +49,10 @@ target_link_libraries(crossing PRIVATE
 )
 
 if(WIN32)
-    add_custom_command(TARGET crossing POST_BUILD
+    add_custom_command(TARGET main POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_RUNTIME_DLLS:crossing>
-            $<TARGET_FILE_DIR:crossing>
+            $<TARGET_RUNTIME_DLLS:main>
+            $<TARGET_FILE_DIR:main>
         COMMAND_EXPAND_LISTS
     )
 endif()

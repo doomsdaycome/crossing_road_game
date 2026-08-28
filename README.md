@@ -1,47 +1,71 @@
-![](https://img.shields.io/badge/Code-C-informational?style=flat&logo=c&logoColor=white&color=brightgreen)
-![](https://img.shields.io/badge/Code-C++-informational?style=flat&logo=cplusplus&logoColor=white&color=brightgreen)
-# Crossing road game!
+# 🐸 Crossing Road Game
 
-1. [Introduction](#introduction)
-2. [Installation](#installation)
-3. [Execution](#execution)
-4. [Troubleshoot](#troubleshoot)
+![C++](https://img.shields.io/badge/C++-17-blue.svg)
+![SFML](https://img.shields.io/badge/SFML-3.0-green.svg)
+![CMake](https://img.shields.io/badge/CMake-Build-orange.svg)
+![License](https://img.shields.io/badge/License-MIT-brightgreen.svg)
 
-## Introduction
+An object-oriented, continuous-scrolling arcade game inspired by Crossy Road. Developed in C++ using the Simple and Fast Multimedia Library (SFML), this project emphasizes scalable software architecture, clean code principles, and efficient memory management.
 
-## Installation
+## ✨ Features
+* **Dual Game Modes:** 
+  * *Classic Mode:* Pre-designed levels loaded dynamically from JSON files.
+  * *Endless Mode:* Procedurally generated lanes with increasing difficulty and adaptive speed.
+* **Robust Save/Load System:** State serialization using `nlohmann/json` to save and resume game progress.
+* **Optimized Rendering:** Culling system that dynamically removes off-screen entities to prevent memory leaks and maintain high FPS.
 
-> [!WARNING]
-> Mọi chỉnh sửa phải thực hiện ở trong brach của bạn. Main là sản phẩm cuối cùng và là tham chiếu chuẩn, chắc là vậy! tên branch là tên viết tắt email của bạn
+## 🏗️ Software Architecture & Design Patterns
+This project is structured with Enterprise-level Game Development standards in mind:
+* **State Machine Pattern:** Decouples game phases (`PlayState`, `MenuState`, `GameOverState`) for seamless transitions.
+* **Separation of Concerns (Clean Architecture):**
+  * `gameplay/`: Core mechanics isolated into dedicated managers (`LaneManager`, `CollisionSystem`, `ScoreManager`).
+  * `services/`: Low-level system operations (`ResourceManager`, `LevelRepository`) handling I/O and Asset Caching.
+  * `data/`: Pure Data Transfer Objects (DTOs) like `GameSnapshot` to eliminate circular dependencies.
+* **Singleton Pattern:** Global `ResourceManager` to ensure textures and fonts are loaded into memory exactly once.
 
-### Release
-
-You can download our game in release section and run it by using [Execution](#execution)
-
-### Manual
-
-```bash
-git clone https://github.com/doomsdaycome/crossing_road_game.git
-cd ./crossing_road_game/
-mkdir build/
-cmake ../ && cmake --build ./
+## 📂 Project Structure
+```text
+CROSSING_ROAD_GAME/
+├── asset/              # Textures, Fonts, and JSON level data
+├── include/            # Header files (.hpp)
+│   ├── core/           # Game loop and global configurations
+│   ├── data/           # DTOs (LevelData, GameSnapshot)
+│   ├── entities/       # Player, Monster, Lane objects
+│   ├── gameplay/       # Collision, Lane, and Score logic
+│   ├── services/       # Resource & File I/O Managers
+│   └── states/         # Game screens (Menu, Play, Settings)
+├── source/             # Implementation files (.cpp)
+└── CMakeLists.txt      # CMake build configuration
 ```
 
-## Execution
+## 🚀 Getting Started
+Prerequisites
+* C++ Compiler: Supports C++17 standard or higher.
+* CMake: Version 3.10 or higher.
+* SFML: Version 3.0.x (Ensure SFML is installed and discoverable by CMake).
 
+Build Instructions (Windows / Linux)
+1. Clone the repository:
 ```bash
-./build/crossing.exe
+git clone https://github.com/YinceIuCode/Crossing-Road-Game.git
+cd crossing-road-game
 ```
+2. Generate build files using CMake:
+```bash
+mkdir build
+cd build
+cmake ..
+```
+3. Compile the project:
+```bash
+cmake --build .
+```
+4. Run the executable generated in the build or bin directory. (Note: Ensure the asset/ folder is in the same directory as the executable).
 
-## Troubleshoot
+## 📜 License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Contributing
-
-Pull requests are not welcome and abandoned by our mentor. For major changes, please open an issue first
-to discuss what you would like to change. However we won't accept that!
-
-Please make sure to update tests as appropriate.
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
+## 👨‍💻 Author
+Hoàng Đức Vinh
+Undergraduate Student (Information Technology)
+*University of Science, VNU-HCM (HCMUS)*
