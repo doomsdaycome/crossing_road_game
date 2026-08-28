@@ -16,11 +16,19 @@ An object-oriented, continuous-scrolling arcade game inspired by Crossy Road. De
 
 Crossing Castle Game is an object-oriented, continuous-scrolling arcade game inspired by the mechanics of Crossy Road. Developed using modern C++17 and Simple and Fast Multimedia Library (SFML 3.0), the project serves as a showcase of scalable software architecture, modular software design, clean code principles, and low-overhead memory management.
 
+![](doc/showcase/1.png)
+
 ### Key Features
 * **Dual Gameplay Modes:**
   * **Classic Mode:** Structured, pre-designed levels loaded dynamically from JSON file configurations.
   * **Endless Mode:** Procedurally generated terrain and lanes with progressive difficulty scaling and adaptive movement speeds.
+
+![](doc/showcase/2.png)
+
 * **Save/Load & State Persistence:** State serialization powered by `nlohmann/json`, allowing players to save ongoing progress and resume at any time.
+
+![](doc/showcase/3.png)
+
 * **Viewport Culling & Performance Optimization:** Dynamic entity tracking and culling systems that immediately clean up off-screen objects to eliminate memory leaks and sustain high frame rates.
 * **Audio & Visual Feedback:** Dynamic asset loading with sound effects, ambient background audio, and smooth visual animations.
 
