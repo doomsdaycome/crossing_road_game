@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.23)
-project(startorch LANGUAGES CXX)
+project(game LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
@@ -13,34 +13,27 @@ find_package(SFML 3.1 REQUIRED COMPONENTS System Window Graphics Audio Network)
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS source/*.cpp)
 
-# add_executable(main
-#     source/main.cpp
-#     source/core/CGAME.cpp
-#     source/states/MenuState.cpp
-#     source/states/PlayingState.cpp
-# )
-
-add_executable(main ${SOURCE_FILES})
+add_executable(game ${SOURCE_FILES})
 
 add_custom_command(
-    TARGET main POST_BUILD
+    TARGET game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_SOURCE_DIR}/asset"
-    "$<TARGET_FILE_DIR:main>/asset"
+    "$<TARGET_FILE_DIR:game>/asset"
 )
 
 add_custom_command(
-    TARGET main POST_BUILD
+    TARGET game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_SOURCE_DIR}/data"
-    "$<TARGET_FILE_DIR:main>/data"
+    "$<TARGET_FILE_DIR:game>/data"
 )
 
-target_include_directories(main PRIVATE
+target_include_directories(game PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
-target_link_libraries(main PRIVATE
+target_link_libraries(game PRIVATE
     SFML::System
     SFML::Window
     SFML::Graphics
@@ -49,10 +42,10 @@ target_link_libraries(main PRIVATE
 )
 
 if(WIN32)
-    add_custom_command(TARGET main POST_BUILD
+    add_custom_command(TARGET game POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_RUNTIME_DLLS:main>
-            $<TARGET_FILE_DIR:main>
+            $<TARGET_RUNTIME_DLLS:game>
+            $<TARGET_FILE_DIR:game>
         COMMAND_EXPAND_LISTS
     )
 endif()
